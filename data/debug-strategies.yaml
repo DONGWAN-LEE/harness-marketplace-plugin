@@ -1,0 +1,315 @@
+# Debug Strategies - error-type debugging strategy catalog for the debug phase
+# Used by project-debug to match error patterns and guide systematic investigation
+# Each strategy provides investigation steps, common causes, and fix patterns
+
+debug_strategies:
+
+  runtime_errors:
+
+    - id: null-reference
+      name: Null/Undefined Reference
+      error_patterns:
+        - "Cannot read properties of undefined"
+        - "Cannot read properties of null"
+        - "TypeError: .* is not a function"
+        - "NullPointerException"
+        - "AttributeError: 'NoneType'"
+        - "undefined is not an object"
+      investigation_steps:
+        - Trace variable origin from stack trace to its source
+        - Check function arguments at the call site
+        - Verify database/API return values for null cases
+        - Check for missing null guards or optional chaining
+        - Inspect async operation results (await missing?)
+      common_causes:
+        - Missing null check after async operation
+        - Optional chaining (?.) not used on nullable property
+        - API response shape changed (field removed or renamed)
+        - Database query returns null for deleted/missing record
+        - Race condition where object is accessed before initialization
+      fix_patterns:
+        - Add null guard with early return
+        - Add optional chaining (?.) operator
+        - Add default values with nullish coalescing (??)
+        - Add runtime type validation at function entry
+      impact_grep_patterns:
+        - Same property access without null check in similar files
+        - Same API response field used without optional chaining
+
+    - id: type-error
+      name: Type Mismatch
+      error_patterns:
+        - "TypeError:"
+        - "Type '.*' is not assignable"
+        - "Expected .*, got .*"
+        - "cannot convert"
+        - "ClassCastException"
+      investigation_steps:
+        - Check TypeScript type definitions for the involved types
+        - Trace data transformations from source to error point
+        - Compare API contract (types) vs actual runtime response
+        - Check for implicit type coercion
+      common_causes:
+        - Interface changed but callers not updated
+        - Runtime type differs from compile-time type (any escape hatch)
+        - JSON.parse result used without validation
+        - Number/string confusion in comparisons
+      fix_patterns:
+        - Update type definition to match reality
+        - Add runtime type validation (zod, io-ts)
+        - Add type assertion with proper validation
+        - Fix implicit coercion with explicit conversion
+
+    - id: import-resolution
+      name: Module Import Failure
+      error_patterns:
+        - "Cannot find module"
+        - "Module not found"
+        - "ModuleNotFoundError"
+        - "ImportError"
+        - "No module named"
+      investigation_steps:
+        - Check if module exists at the specified path
+        - Verify package.json dependencies (installed?)
+        - Check tsconfig.json paths and baseUrl
+        - Verify build output includes the module
+        - Check for circular dependency
+      common_causes:
+        - Missing dependency (not installed)
+        - Incorrect import path (typo or wrong relative path)
+        - Circular dependency causing undefined import
+        - Module deleted or renamed without updating imports
+      fix_patterns:
+        - Install missing package
+        - Fix import path
+        - Break circular dependency
+        - Update import after rename
+
+    - id: assertion-failure
+      name: Test Assertion Failure
+      error_patterns:
+        - "AssertionError"
+        - "expect(.*)\\.(toBe|toEqual|toMatch)"
+        - "Expected .* but received .*"
+        - "assert .* failed"
+      investigation_steps:
+        - Compare expected vs actual values in detail
+        - Trace data flow from input to the assertion point
+        - Check if test setup (beforeEach) is correct
+        - Verify mock return values match reality
+        - Check for async timing issues in test
+      common_causes:
+        - Business logic change not reflected in test expectations
+        - Mock returns stale data that no longer matches real behavior
+        - Off-by-one error in logic
+        - Floating point comparison without tolerance
+        - Async operation not awaited in test
+      fix_patterns:
+        - Update test expectation to match new behavior
+        - Fix business logic to match specification
+        - Update mock data to match current API shape
+        - Add proper async handling (await, done callback)
+
+  compile_errors:
+
+    - id: typescript-compile
+      name: TypeScript Compilation Error
+      error_patterns:
+        - "TS\\d+:"
+        - "error TS"
+        - "Type error:"
+      investigation_steps:
+        - Read exact TypeScript error code documentation
+        - Check type definitions of all involved types
+        - Check tsconfig.json strictness settings
+        - Look for recently changed interfaces or types
+      common_causes:
+        - Strict null checks violation
+        - Missing type export from library
+        - Incompatible library type versions
+        - Generic constraint not satisfied
+      fix_patterns:
+        - Add proper null handling (if strictNullChecks)
+        - Update or add type declarations
+        - Align library versions
+        - Add proper generic constraints
+
+    - id: build-failure
+      name: Build/Bundle Failure
+      error_patterns:
+        - "Build failed"
+        - "Compilation failed"
+        - "webpack.*error"
+        - "vite.*error"
+        - "esbuild.*error"
+      investigation_steps:
+        - Read the first error message (often cascading)
+        - Check if new dependencies need build configuration
+        - Verify environment variables are set
+        - Check for conflicting versions in lock file
+      common_causes:
+        - Missing environment variable
+        - New dependency needs loader/plugin configuration
+        - Version conflict in dependency tree
+        - Import of server-only code in client bundle
+
+  logic_errors:
+
+    - id: wrong-output
+      name: Incorrect Business Logic Output
+      error_patterns:
+        - "Expected .* but received .*"
+        - "incorrect result"
+        - "wrong output"
+        - "calculation error"
+      investigation_steps:
+        - Add logging at each step of the computation
+        - Compare expected vs actual at each transformation step
+        - Check conditional branching logic (if/else, switch)
+        - Verify mathematical operations and edge cases
+        - Check array/object mutation vs immutability
+      common_causes:
+        - Off-by-one error in loops or indexes
+        - Wrong comparison operator (== vs ===, < vs <=)
+        - Missing edge case handling (empty array, zero, negative)
+        - Mutating shared state instead of creating new copy
+        - Wrong variable used (shadowing or similar names)
+      fix_patterns:
+        - Fix comparison operator
+        - Add edge case handling
+        - Use immutable operations (spread, map instead of mutation)
+        - Rename shadowed variables for clarity
+
+    - id: state-inconsistency
+      name: State Management Bug
+      error_patterns:
+        - "stale state"
+        - "state not updating"
+        - "infinite loop"
+        - "Maximum update depth exceeded"
+      investigation_steps:
+        - Trace state mutation chain from trigger to render
+        - Check for missing dependency in useEffect/useMemo
+        - Verify state update is immutable (not mutating)
+        - Check for circular state updates
+      common_causes:
+        - Missing dependency in React useEffect
+        - Direct state mutation instead of setState
+        - Circular state update (A updates B, B updates A)
+        - Stale closure capturing old state value
+      fix_patterns:
+        - Add missing dependencies to useEffect
+        - Use functional setState to avoid stale closures
+        - Break circular update chain
+        - Add proper memoization
+
+  performance_errors:
+
+    - id: timeout
+      name: Timeout / Performance Degradation
+      error_patterns:
+        - "Timeout"
+        - "ETIMEDOUT"
+        - "took too long"
+        - "exceeded .* ms"
+        - "slow query"
+      investigation_steps:
+        - Identify the slow operation (add timing logs)
+        - Check for N+1 query patterns
+        - Check for missing database indexes
+        - Profile memory usage for leaks
+        - Check for synchronous blocking operations
+      common_causes:
+        - N+1 database query in a loop
+        - Missing database index on filtered/joined column
+        - Synchronous file I/O blocking event loop
+        - Unbounded data fetch (missing LIMIT/pagination)
+        - Memory leak causing GC pressure
+      fix_patterns:
+        - Add eager loading / batch query
+        - Add database index
+        - Convert to async operation
+        - Add pagination/limit
+        - Fix memory leak (clear intervals, remove listeners)
+
+  concurrency_errors:
+
+    - id: race-condition
+      name: Race Condition / Timing Issue
+      error_patterns:
+        - "deadlock"
+        - "lock timeout"
+        - "intermittent"
+        - "flaky"
+        - "sometimes fails"
+        - "works on retry"
+      investigation_steps:
+        - Check shared mutable state access patterns
+        - Verify lock ordering (consistent across all paths)
+        - Check async operation sequencing (missing await?)
+        - Look for time-of-check-to-time-of-use (TOCTOU) bugs
+        - Run test multiple times to reproduce
+      common_causes:
+        - Missing await on async operation
+        - Shared state modified without synchronization
+        - Event ordering assumption that doesn't hold
+        - Database transaction isolation level too low
+        - Optimistic locking without retry
+      fix_patterns:
+        - Add proper await/async handling
+        - Add mutex/lock for shared state
+        - Use database transactions with proper isolation
+        - Add retry with backoff for optimistic locking
+        - Use atomic operations where possible
+
+    - id: double-execution
+      name: Double Execution / Duplicate Processing
+      error_patterns:
+        - "duplicate"
+        - "already exists"
+        - "unique constraint"
+        - "idempotency"
+        - "processed twice"
+      investigation_steps:
+        - Check if operation is idempotent
+        - Look for missing deduplication logic
+        - Check event handler registration (double subscribe?)
+        - Verify React strict mode double-render handling
+      common_causes:
+        - Missing idempotency key
+        - Event listener registered multiple times
+        - React useEffect missing cleanup function
+        - Message queue without deduplication
+      fix_patterns:
+        - Add idempotency key to operations
+        - Add cleanup to useEffect
+        - Use Set/Map for deduplication
+        - Add unique constraint at database level
+
+  environment_errors:
+
+    - id: config-mismatch
+      name: Environment / Configuration Error
+      error_patterns:
+        - "ECONNREFUSED"
+        - "connection refused"
+        - "env"
+        - "config"
+        - "ENOENT"
+        - "permission denied"
+      investigation_steps:
+        - Check environment variables are set correctly
+        - Verify service connectivity (database, API, cache)
+        - Compare dev vs prod configuration
+        - Check file permissions
+        - Verify port availability
+      common_causes:
+        - Missing or wrong environment variable
+        - Service not running (database, Redis, etc.)
+        - Port conflict with another process
+        - File path differs between OS (Windows vs Unix)
+      fix_patterns:
+        - Set correct environment variable
+        - Start required service
+        - Use cross-platform path handling
+        - Add configuration validation at startup

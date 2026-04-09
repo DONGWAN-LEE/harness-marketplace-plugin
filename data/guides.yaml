@@ -1,0 +1,347 @@
+# Guides - development guide catalog for the scaffolding wizard
+# Used by AI to filter/rank guide options based on project type, tech stack, and concerns
+# Each guide becomes a project-specific reference document with rules and code examples
+
+guides:
+
+  development:
+
+    - id: api-design
+      name: API Design Guidelines
+      domain: development
+      description: REST/GraphQL API design guidelines covering naming conventions, error handling, pagination, versioning, rate limiting, and OpenAPI documentation standards.
+      suitable_project_types:
+        - web
+        - backend
+        - mobile
+      key_topics:
+        - naming_conventions
+        - error_handling
+        - pagination
+        - versioning
+        - rate_limiting
+        - openapi_documentation
+      recommended_when:
+        - has_backend
+
+    - id: database-design
+      name: Database Design Guide
+      domain: development
+      description: Database schema design best practices, migration safety rules, indexing strategy, query optimization guidelines, and data modeling patterns for the chosen database.
+      suitable_project_types:
+        - web
+        - backend
+        - mobile
+        - data
+      key_topics:
+        - schema_design
+        - migration_safety
+        - indexing_strategy
+        - query_optimization
+        - data_modeling
+      recommended_when:
+        - has_database
+
+    - id: auth-security
+      name: Auth & Security Patterns
+      domain: development
+      description: Authentication and authorization patterns including token handling, session management, RBAC/ABAC implementation, OAuth/OIDC integration, and security headers configuration.
+      suitable_project_types:
+        - web
+        - backend
+        - mobile
+        - desktop
+      key_topics:
+        - token_handling
+        - session_management
+        - rbac_abac
+        - oauth_oidc
+        - security_headers
+      recommended_when:
+        - has_auth
+
+    - id: testing-strategy
+      name: Testing Strategy Guide
+      domain: development
+      description: Test organization, coverage targets, mocking guidelines, test naming conventions, CI integration, and framework-specific testing patterns for the chosen test runner.
+      suitable_project_types:
+        - web
+        - mobile
+        - backend
+        - desktop
+        - game
+        - cli
+        - data
+        - iot
+      key_topics:
+        - test_organization
+        - coverage_targets
+        - mocking_guidelines
+        - naming_conventions
+        - ci_integration
+      recommended_when: []
+
+    - id: error-handling
+      name: Error Handling Patterns
+      domain: development
+      description: Error handling strategy covering error classification, logging standards, retry policies, circuit breaker patterns, user-facing error messages, and error monitoring integration.
+      suitable_project_types:
+        - web
+        - mobile
+        - backend
+        - desktop
+        - game
+        - cli
+        - data
+        - iot
+      key_topics:
+        - error_classification
+        - logging_standards
+        - retry_policies
+        - circuit_breaker
+        - error_monitoring
+      recommended_when: []
+
+  frontend:
+
+    - id: frontend-architecture
+      name: Frontend Architecture Guide
+      domain: frontend
+      description: Component design patterns, state management strategy, rendering optimization, folder structure conventions, and data fetching patterns for the chosen frontend framework.
+      suitable_project_types:
+        - web
+        - mobile
+        - desktop
+      key_topics:
+        - component_patterns
+        - state_management
+        - rendering_optimization
+        - folder_structure
+        - data_fetching
+      recommended_when:
+        - has_ui
+
+    - id: css-styling
+      name: CSS & Styling Guide
+      domain: frontend
+      description: CSS methodology (BEM, CSS Modules, CSS-in-JS), responsive design breakpoints, theming system, design token usage, and animation performance guidelines.
+      suitable_project_types:
+        - web
+        - mobile
+      key_topics:
+        - css_methodology
+        - responsive_breakpoints
+        - theming_system
+        - design_tokens
+        - animation_performance
+      recommended_when:
+        - has_ui
+
+    - id: accessibility
+      name: Accessibility Guide
+      domain: frontend
+      description: WCAG compliance guidelines, semantic HTML requirements, ARIA usage patterns, keyboard navigation rules, color contrast standards, and screen reader testing procedures.
+      suitable_project_types:
+        - web
+        - mobile
+        - desktop
+      key_topics:
+        - wcag_compliance
+        - semantic_html
+        - aria_patterns
+        - keyboard_navigation
+        - color_contrast
+        - screen_reader_testing
+      recommended_when:
+        - has_ui
+
+  optimization:
+
+    - id: performance-optimization
+      name: Performance Optimization Guide
+      domain: optimization
+      description: Caching strategies, lazy loading patterns, profiling techniques, database query optimization, network request optimization, and monitoring/alerting setup.
+      suitable_project_types:
+        - web
+        - mobile
+        - backend
+        - desktop
+        - game
+        - data
+      key_topics:
+        - caching_strategies
+        - lazy_loading
+        - profiling_techniques
+        - query_optimization
+        - network_optimization
+        - monitoring_alerting
+      recommended_when: []
+
+  operations:
+
+    - id: deployment
+      name: Deployment Guide
+      domain: operations
+      description: Deployment procedures, environment configuration, rollback strategies, health check setup, monitoring integration, and zero-downtime deployment patterns for the chosen platform.
+      suitable_project_types:
+        - web
+        - mobile
+        - backend
+        - desktop
+        - game
+        - cli
+        - data
+        - iot
+      key_topics:
+        - deployment_procedures
+        - environment_configuration
+        - rollback_strategies
+        - health_checks
+        - monitoring_integration
+        - zero_downtime
+      recommended_when: []
+
+    - id: code-review
+      name: Code Review Standards
+      domain: operations
+      description: Code review checklist, PR description templates, review prioritization (security > correctness > performance > style), feedback tone guidelines, and approval criteria.
+      suitable_project_types:
+        - web
+        - mobile
+        - backend
+        - desktop
+        - game
+        - cli
+        - data
+        - iot
+      key_topics:
+        - review_checklist
+        - pr_templates
+        - review_prioritization
+        - feedback_guidelines
+        - approval_criteria
+      recommended_when: []
+
+    - id: git-workflow
+      name: Git Workflow Guide
+      domain: operations
+      description: Branch naming strategy, commit message conventions, PR process, merge strategy (rebase vs merge), release tagging, and hotfix procedures.
+      suitable_project_types:
+        - web
+        - mobile
+        - backend
+        - desktop
+        - game
+        - cli
+        - data
+        - iot
+      key_topics:
+        - branch_naming
+        - commit_conventions
+        - pr_process
+        - merge_strategy
+        - release_tagging
+        - hotfix_procedures
+      recommended_when: []
+
+  i18n:
+
+    - id: i18n-l10n
+      name: Internationalization Guide
+      domain: i18n
+      description: i18n implementation patterns, translation key management, RTL layout support, date/number/currency locale formatting, pluralization rules, and translation workflow setup.
+      suitable_project_types:
+        - web
+        - mobile
+        - desktop
+      key_topics:
+        - i18n_patterns
+        - translation_key_management
+        - rtl_layout
+        - locale_formatting
+        - pluralization
+        - translation_workflow
+      recommended_when: []
+
+  game:
+
+    - id: game-design
+      name: Game Design Patterns Guide
+      domain: game
+      description: Game loop architecture, entity-component patterns, game state management, input handling, physics integration, and game-specific design patterns for the chosen engine/framework.
+      suitable_project_types:
+        - game
+      key_topics:
+        - game_loop
+        - entity_component
+        - game_state_management
+        - input_handling
+        - physics_integration
+        - game_design_patterns
+      recommended_when: []
+
+    - id: multiplayer-networking
+      name: Multiplayer Networking Guide
+      domain: game
+      description: Netcode architecture, client-server authority model, state synchronization patterns, lag compensation techniques, anti-cheat strategies, and matchmaking system design.
+      suitable_project_types:
+        - game
+      key_topics:
+        - netcode_architecture
+        - client_server_authority
+        - state_synchronization
+        - lag_compensation
+        - anti_cheat
+        - matchmaking
+      recommended_when:
+        - has_realtime
+
+  data:
+
+    - id: data-pipeline
+      name: Data Pipeline Guide
+      domain: data
+      description: ETL/ELT patterns, data quality validation, schema evolution strategy, idempotent processing, error handling and dead letter queues, and scheduling/orchestration best practices.
+      suitable_project_types:
+        - data
+        - backend
+      key_topics:
+        - etl_elt_patterns
+        - data_quality
+        - schema_evolution
+        - idempotent_processing
+        - dead_letter_queues
+        - orchestration
+      recommended_when: []
+
+    - id: ml-ops
+      name: MLOps Guide
+      domain: data
+      description: Model training pipelines, experiment tracking, model versioning, A/B testing setup, feature store patterns, and model deployment/serving infrastructure.
+      suitable_project_types:
+        - data
+      key_topics:
+        - training_pipelines
+        - experiment_tracking
+        - model_versioning
+        - ab_testing
+        - feature_store
+        - model_serving
+      recommended_when: []
+
+  iot:
+
+    - id: iot-embedded
+      name: IoT & Embedded Guide
+      domain: iot
+      description: Resource-constrained development patterns, OTA update safety, power management strategies, sensor data handling, edge computing patterns, and device fleet management.
+      suitable_project_types:
+        - iot
+      key_topics:
+        - resource_constraints
+        - ota_updates
+        - power_management
+        - sensor_data
+        - edge_computing
+        - fleet_management
+      recommended_when: []

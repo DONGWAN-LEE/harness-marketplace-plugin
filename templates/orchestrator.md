@@ -7,9 +7,9 @@ description: {{DESCRIPTION}}
 
 ## Overview
 
-`/project-harness "task description"` runs the full **classify→explore→design→[user confirm]→implement→test→[visual QA]→verify** pipeline automatically.
+`/project-harness "task description"` runs the full **classify→explore→design→[user confirm]→[debug]→implement→test→[visual QA]→verify** pipeline automatically.
 
-Chains four sub-skills (`project-plan`, `project-implement`, `project-visual-qa`, `project-verify`) in a sequential pipeline. All behavior is driven by the project's `project-config.yaml`.
+Chains up to five sub-skills (`project-plan`, `project-debug`, `project-implement`, `project-visual-qa`, `project-verify`) in a sequential pipeline. All behavior is driven by the project's `project-config.yaml`.
 
 ## Usage
 
@@ -20,6 +20,7 @@ Chains four sub-skills (`project-plan`, `project-implement`, `project-visual-qa`
 /project-harness --dry-run "desc"             — plan phase only (design preview)
 /project-harness --no-team "desc"             — disable team (force sequential mode)
 /project-harness --skip-qa "desc"             — skip visual QA even if has_ui (minor UI changes)
+/project-harness --skip-debug "desc"          — skip debug phase for bugfix tasks
 /project-harness --skip-verify "desc"         — skip verification (prototype/PoC)
 /project-harness --verbose "desc"             — show internal worker status in detail
 /project-harness --quiet "desc"               — show final result only
@@ -42,6 +43,9 @@ allowed: /project-harness autopilot "task"           — auto-approve all confir
   │
   ├─ Phase 0+1+2+3 ──→ Skill: project-plan
   │                      → PlanResult (classify + explore + design + user confirm)
+  │
+  ├─ Phase 3.5 ────→ Skill: project-debug  (only when type=bugfix AND debug_complexity != "low")
+  │                      → DebugResult (reproduce + hypothesize + investigate + evidence)
   │
   ├─ Phase 4+5 ────→ Skill: project-implement
   │                      → ImplementationResult (implement + test)
@@ -153,12 +157,32 @@ args: "--team-name project-harness-{slug} --config <Classification JSON> <task d
 
 **`--dry-run` exits here.**
 
+### Step 2.5: project-debug Invocation (Conditional)
+
+Check `type` from Classification JSON. **Skip if**:
+- type != "bugfix"
+- OR `debug_complexity == "low"`
+- OR `--skip-debug` flag is set
+
+```
+Skill: project-debug
+args: "--team-name project-harness-{slug} --plan-result state/results/plan.json --config <Classification JSON> <task description>"
+  (with --no-team: "--no-team --plan-result state/results/plan.json --config <Classification JSON> <task description>")
+```
+
+**Output**: DebugResult (written to `state/results/debug.json`)
+**State update**: Update `current_phase` to `"project-debug-done"` in `state/pipeline-state.json`
+
+**Note**: When `--skip-debug` is used on a `high` complexity bug, emit a warning:
+`⚠️ Skipping debug phase on high-complexity bug. Fix may be less targeted.`
+
 ### Step 3: project-implement Invocation
 
 ```
 Skill: project-implement
-args: "--team-name project-harness-{slug} --plan-result state/results/plan.json --config <Classification JSON> <task description>"
-  (with --no-team: "--no-team --plan-result state/results/plan.json --config <Classification JSON> <task description>")
+args: "--team-name project-harness-{slug} --plan-result state/results/plan.json --debug-result state/results/debug.json --config <Classification JSON> <task description>"
+  (with --no-team: "--no-team --plan-result state/results/plan.json --debug-result state/results/debug.json --config <Classification JSON> <task description>")
+  (when debug was skipped: omit --debug-result)
 ```
 
 **Output**: ImplementationResult (written to `state/results/implement.json`)

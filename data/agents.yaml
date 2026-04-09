@@ -1,0 +1,689 @@
+# Agents - domain-specific verification agents for the scaffolding wizard
+# Used by AI to filter/rank agent options based on project type, tech stack, and concerns
+# Each agent becomes a parallel worker in plan, implement, and verify phases
+
+agents:
+
+  security:
+
+    - id: security-reviewer
+      name: Security Reviewer
+      domain: security
+      description: Reviews code for security vulnerabilities including injection, XSS, CSRF, CORS misconfiguration, auth bypass, and secrets exposure. Validates input sanitization and output encoding.
+      suitable_project_types:
+        - web
+        - mobile
+        - backend
+        - desktop
+        - game
+        - cli
+        - data
+        - iot
+      key_concerns:
+        - injection
+        - xss
+        - csrf
+        - cors
+        - auth_bypass
+        - secrets_exposure
+        - input_sanitization
+      recommended_when:
+        - has_auth
+        - has_backend
+      model: opus
+
+    - id: auth-auditor
+      name: Auth Auditor
+      domain: security
+      description: Validates authentication and authorization flows including token handling, session security, MFA implementation, RBAC/ABAC enforcement, OAuth/OIDC compliance, and JWT best practices.
+      suitable_project_types:
+        - web
+        - mobile
+        - backend
+        - desktop
+      key_concerns:
+        - token_handling
+        - session_security
+        - mfa_flows
+        - rbac_abac
+        - oauth_oidc
+        - jwt_best_practices
+      recommended_when:
+        - has_auth
+      model: opus
+
+    - id: dependency-vulnerability-scanner
+      name: Dependency Vulnerability Scanner
+      domain: security
+      description: Scans dependencies for known CVEs, checks lock file integrity, flags outdated packages with security patches, and validates supply chain safety.
+      suitable_project_types:
+        - web
+        - mobile
+        - backend
+        - desktop
+        - game
+        - cli
+        - data
+        - iot
+      key_concerns:
+        - known_cves
+        - lock_file_integrity
+        - outdated_packages
+        - supply_chain
+      recommended_when: []
+      model: sonnet
+
+  performance:
+
+    - id: performance-auditor
+      name: Performance Auditor
+      domain: performance
+      description: Analyzes code for performance issues including N+1 queries, memory leaks, unnecessary re-renders, algorithmic complexity, and resource-intensive operations.
+      suitable_project_types:
+        - web
+        - mobile
+        - backend
+        - desktop
+        - game
+        - cli
+        - data
+        - iot
+      key_concerns:
+        - n_plus_1_queries
+        - memory_leaks
+        - algorithmic_complexity
+        - resource_intensive_operations
+        - unnecessary_computation
+      recommended_when:
+        - has_backend
+        - has_database
+      model: sonnet
+
+    - id: bundle-size-analyzer
+      name: Bundle Size Analyzer
+      domain: performance
+      description: Monitors JavaScript/CSS bundle sizes, detects tree-shaking failures, flags heavy imports, validates code splitting boundaries, and checks lazy loading implementation.
+      suitable_project_types:
+        - web
+        - mobile
+        - desktop
+      key_concerns:
+        - bundle_size_regression
+        - tree_shaking_failures
+        - heavy_imports
+        - code_splitting
+        - lazy_loading
+      recommended_when:
+        - has_ui
+      model: sonnet
+
+    - id: render-performance-auditor
+      name: Render Performance Auditor
+      domain: performance
+      description: Validates UI rendering performance including unnecessary re-renders, expensive computations in render path, virtualization for large lists, animation frame budget, and layout thrashing.
+      suitable_project_types:
+        - web
+        - mobile
+        - desktop
+      key_concerns:
+        - unnecessary_rerenders
+        - expensive_render_computations
+        - virtualization
+        - animation_frame_budget
+        - layout_thrashing
+      recommended_when:
+        - has_ui
+      model: sonnet
+
+    - id: memory-profiler
+      name: Memory Profiler
+      domain: performance
+      description: Detects memory leaks, monitors heap usage patterns, validates garbage collection friendliness, checks for unbounded caches, and reviews object lifecycle management.
+      suitable_project_types:
+        - backend
+        - game
+        - desktop
+        - data
+      key_concerns:
+        - memory_leaks
+        - heap_usage
+        - garbage_collection
+        - unbounded_caches
+        - object_lifecycle
+      recommended_when: []
+      model: sonnet
+
+  database:
+
+    - id: db-auditor
+      name: Database Auditor
+      domain: database
+      description: Reviews database queries, migrations, and indexes. Checks for slow queries, missing indexes, N+1 patterns, data integrity issues, and query optimization opportunities.
+      suitable_project_types:
+        - web
+        - mobile
+        - backend
+        - desktop
+        - data
+      key_concerns:
+        - slow_queries
+        - missing_indexes
+        - n_plus_1
+        - data_integrity
+        - query_optimization
+      recommended_when:
+        - has_database
+      model: sonnet
+
+    - id: migration-safety-reviewer
+      name: Migration Safety Reviewer
+      domain: database
+      description: Validates database migration files for backward compatibility, data loss risk, table locking behavior, rollback safety, and zero-downtime deployment compatibility.
+      suitable_project_types:
+        - web
+        - backend
+        - mobile
+      key_concerns:
+        - backward_compatibility
+        - data_loss_risk
+        - table_locking
+        - rollback_safety
+        - zero_downtime
+      recommended_when:
+        - has_database
+      model: opus
+
+    - id: concurrency-auditor
+      name: Concurrency Auditor
+      domain: database
+      description: Reviews transaction isolation, prevents double-spending and duplicate operations, validates Redis cache consistency, checks race conditions in concurrent request handling, and reviews optimistic locking usage.
+      suitable_project_types:
+        - web
+        - backend
+        - game
+        - data
+      key_concerns:
+        - transaction_isolation
+        - double_spending
+        - cache_consistency
+        - race_conditions
+        - optimistic_locking
+      recommended_when:
+        - has_database
+        - has_realtime
+      model: opus
+
+  architecture:
+
+    - id: architecture-reviewer
+      name: Architecture Reviewer
+      domain: architecture
+      description: Validates architectural boundaries including layer violations, circular dependencies, import direction rules, module coupling, and separation of concerns.
+      suitable_project_types:
+        - web
+        - mobile
+        - backend
+        - desktop
+        - game
+      key_concerns:
+        - layer_violations
+        - circular_dependencies
+        - import_direction
+        - module_coupling
+        - separation_of_concerns
+      recommended_when: []
+      model: opus
+
+    - id: api-design-reviewer
+      name: API Design Reviewer
+      domain: architecture
+      description: Reviews API design for REST conventions, GraphQL schema quality, error response consistency, versioning strategy, pagination patterns, and OpenAPI/Swagger compliance.
+      suitable_project_types:
+        - web
+        - backend
+        - mobile
+      key_concerns:
+        - rest_conventions
+        - graphql_schema_quality
+        - error_response_consistency
+        - versioning
+        - pagination
+        - openapi_compliance
+      recommended_when:
+        - has_backend
+      model: sonnet
+
+  quality:
+
+    - id: code-quality-reviewer
+      name: Code Quality Reviewer
+      domain: quality
+      description: General code quality review covering naming conventions, dead code detection, code duplication, consistent error handling patterns, logging standards, and documentation completeness.
+      suitable_project_types:
+        - web
+        - mobile
+        - backend
+        - desktop
+        - game
+        - cli
+        - data
+        - iot
+      key_concerns:
+        - naming_conventions
+        - dead_code
+        - code_duplication
+        - error_handling_patterns
+        - logging_standards
+      recommended_when: []
+      model: sonnet
+
+    - id: type-safety-auditor
+      name: Type Safety Auditor
+      domain: quality
+      description: Validates TypeScript/type system usage including any-type escape hatches, type assertion misuse, generic constraints, runtime type validation alignment, and strict mode compliance.
+      suitable_project_types:
+        - web
+        - mobile
+        - backend
+        - desktop
+        - cli
+      key_concerns:
+        - any_type_usage
+        - type_assertion_misuse
+        - generic_constraints
+        - runtime_type_validation
+        - strict_mode_compliance
+      recommended_when: []
+      model: sonnet
+
+    - id: error-handling-reviewer
+      name: Error Handling Reviewer
+      domain: quality
+      description: Reviews error handling patterns including uncaught exceptions, error boundary coverage, retry logic, graceful degradation, user-facing error messages, and error reporting integration.
+      suitable_project_types:
+        - web
+        - mobile
+        - backend
+        - desktop
+        - game
+        - cli
+        - data
+        - iot
+      key_concerns:
+        - uncaught_exceptions
+        - error_boundaries
+        - retry_logic
+        - graceful_degradation
+        - error_messages
+        - error_reporting
+      recommended_when: []
+      model: sonnet
+
+    - id: testing-strategy-reviewer
+      name: Testing Strategy Reviewer
+      domain: quality
+      description: Validates test coverage and quality including missing edge cases, test isolation, mock quality, assertion completeness, integration test coverage, and CI test reliability.
+      suitable_project_types:
+        - web
+        - mobile
+        - backend
+        - desktop
+        - game
+        - cli
+        - data
+        - iot
+      key_concerns:
+        - missing_edge_cases
+        - test_isolation
+        - mock_quality
+        - assertion_completeness
+        - integration_coverage
+        - ci_test_reliability
+      recommended_when: []
+      model: sonnet
+
+  frontend:
+
+    - id: accessibility-checker
+      name: Accessibility Checker
+      domain: frontend
+      description: Validates WCAG compliance including semantic HTML, ARIA labels, keyboard navigation, color contrast, focus management, screen reader compatibility, and touch target sizes.
+      suitable_project_types:
+        - web
+        - mobile
+        - desktop
+      key_concerns:
+        - semantic_html
+        - aria_labels
+        - keyboard_navigation
+        - color_contrast
+        - focus_management
+        - screen_reader
+        - touch_targets
+      recommended_when:
+        - has_ui
+      model: sonnet
+
+    - id: responsive-design-reviewer
+      name: Responsive Design Reviewer
+      domain: frontend
+      description: Checks responsive layouts including breakpoint consistency, touch target sizes, viewport handling, image responsiveness, mobile-first patterns, and fluid typography.
+      suitable_project_types:
+        - web
+        - mobile
+      key_concerns:
+        - breakpoint_consistency
+        - touch_targets
+        - viewport_handling
+        - image_responsiveness
+        - mobile_first
+        - fluid_typography
+      recommended_when:
+        - has_ui
+      model: sonnet
+
+    - id: i18n-l10n-reviewer
+      name: i18n/L10n Reviewer
+      domain: frontend
+      description: Validates internationalization including hardcoded strings detection, RTL layout support, date/number/currency formatting, pluralization rules, and translation key completeness.
+      suitable_project_types:
+        - web
+        - mobile
+        - desktop
+      key_concerns:
+        - hardcoded_strings
+        - rtl_layout
+        - date_number_formatting
+        - pluralization
+        - translation_completeness
+      recommended_when: []
+      model: sonnet
+
+    - id: state-management-auditor
+      name: State Management Auditor
+      domain: frontend
+      description: Reviews client-side state management including unnecessary global state, derived state anti-patterns, state synchronization bugs, cache invalidation, and optimistic update consistency.
+      suitable_project_types:
+        - web
+        - mobile
+        - desktop
+      key_concerns:
+        - unnecessary_global_state
+        - derived_state_antipatterns
+        - state_synchronization
+        - cache_invalidation
+        - optimistic_updates
+      recommended_when:
+        - has_ui
+      model: sonnet
+
+  devops:
+
+    - id: ci-cd-reviewer
+      name: CI/CD Reviewer
+      domain: devops
+      description: Reviews CI/CD pipeline configuration including step ordering, caching strategy, secret handling, deployment gates, rollback procedures, and build optimization.
+      suitable_project_types:
+        - web
+        - mobile
+        - backend
+        - desktop
+        - game
+        - cli
+        - data
+        - iot
+      key_concerns:
+        - step_ordering
+        - caching_strategy
+        - secret_handling
+        - deployment_gates
+        - rollback_procedures
+        - build_optimization
+      recommended_when: []
+      model: sonnet
+
+    - id: docker-reviewer
+      name: Docker Reviewer
+      domain: devops
+      description: Validates Dockerfiles and compose configs including image size optimization, layer caching, security best practices, multi-stage builds, healthcheck configuration, and non-root user setup.
+      suitable_project_types:
+        - web
+        - backend
+        - data
+        - game
+      key_concerns:
+        - image_size
+        - layer_caching
+        - security_best_practices
+        - multi_stage_builds
+        - healthchecks
+        - non_root_user
+      recommended_when: []
+      model: sonnet
+
+    - id: infrastructure-reviewer
+      name: Infrastructure Reviewer
+      domain: devops
+      description: Reviews infrastructure-as-code (Terraform, CDK, Pulumi) including resource naming, security groups, IAM policies, cost optimization, state management, and drift detection.
+      suitable_project_types:
+        - backend
+        - data
+        - iot
+      key_concerns:
+        - resource_naming
+        - security_groups
+        - iam_policies
+        - cost_optimization
+        - state_management
+        - drift_detection
+      recommended_when: []
+      model: sonnet
+
+  game:
+
+    - id: game-balance-validator
+      name: Game Balance Validator
+      domain: game
+      description: Reviews game mechanics balance including economy tuning, difficulty curves, progression systems, reward schedules, statistical fairness, and drop rate verification.
+      suitable_project_types:
+        - game
+      key_concerns:
+        - economy_tuning
+        - difficulty_curves
+        - progression_systems
+        - reward_schedules
+        - statistical_fairness
+        - drop_rates
+      recommended_when: []
+      model: opus
+
+    - id: game-economy-auditor
+      name: Game Economy Auditor
+      domain: game
+      description: Validates gacha probability compliance with regional laws (Japan/Korea/China), monitors currency inflation, P2W balance, shop pricing fairness, and virtual goods economy health.
+      suitable_project_types:
+        - game
+      key_concerns:
+        - gacha_probability_compliance
+        - currency_inflation
+        - p2w_balance
+        - shop_pricing
+        - virtual_economy_health
+        - regional_law_compliance
+      recommended_when: []
+      model: opus
+
+    - id: game-netcode-reviewer
+      name: Game Netcode Reviewer
+      domain: game
+      description: Validates multiplayer networking including client-server authority model, lag compensation, state synchronization, anti-cheat measures, bandwidth optimization, and reconnection handling.
+      suitable_project_types:
+        - game
+      key_concerns:
+        - client_server_authority
+        - lag_compensation
+        - state_synchronization
+        - anti_cheat
+        - bandwidth_optimization
+        - reconnection_handling
+      recommended_when:
+        - has_realtime
+      model: opus
+
+    - id: server-authority-auditor
+      name: Server Authority Auditor
+      domain: game
+      description: Ensures all critical game logic runs server-side. Validates client value re-verification, server-side random number generation, cheat prevention, and race condition protection in game actions.
+      suitable_project_types:
+        - game
+      key_concerns:
+        - client_value_revalidation
+        - server_side_random
+        - cheat_prevention
+        - race_condition_protection
+        - action_validation
+      recommended_when:
+        - has_backend
+        - has_realtime
+      model: opus
+
+  data:
+
+    - id: data-pipeline-reviewer
+      name: Data Pipeline Reviewer
+      domain: data
+      description: Reviews data pipeline code for idempotency, schema evolution safety, error recovery mechanisms, data quality checks, lineage tracking, and backpressure handling.
+      suitable_project_types:
+        - data
+        - backend
+      key_concerns:
+        - idempotency
+        - schema_evolution
+        - error_recovery
+        - data_quality_checks
+        - lineage_tracking
+        - backpressure
+      recommended_when: []
+      model: sonnet
+
+    - id: ml-model-reviewer
+      name: ML Model Reviewer
+      domain: data
+      description: Validates ML code including data leakage prevention, reproducibility, evaluation metric selection, feature engineering quality, model serialization safety, and inference optimization.
+      suitable_project_types:
+        - data
+      key_concerns:
+        - data_leakage
+        - reproducibility
+        - evaluation_metrics
+        - feature_engineering
+        - model_serialization
+        - inference_optimization
+      recommended_when: []
+      model: opus
+
+  iot:
+
+    - id: embedded-safety-reviewer
+      name: Embedded Safety Reviewer
+      domain: iot
+      description: Reviews embedded/IoT code for memory safety, power management, watchdog timer usage, OTA update safety, resource constraint compliance, and real-time guarantee validation.
+      suitable_project_types:
+        - iot
+      key_concerns:
+        - memory_safety
+        - power_management
+        - watchdog_timers
+        - ota_update_safety
+        - resource_constraints
+        - realtime_guarantees
+      recommended_when: []
+      model: sonnet
+
+  debugging:
+
+    - id: root-cause-analyst
+      name: Root Cause Analyst
+      domain: debugging
+      description: Systematically generates and tests hypotheses for bug root causes. Traces error propagation paths, validates assumptions against actual code, ranks hypotheses by evidence strength, and produces structured root cause reports.
+      suitable_project_types:
+        - web
+        - mobile
+        - backend
+        - desktop
+        - game
+        - cli
+        - data
+        - iot
+      key_concerns:
+        - hypothesis_generation
+        - evidence_gathering
+        - error_propagation_tracing
+        - root_cause_ranking
+        - systematic_elimination
+      recommended_when: []
+      model: opus
+
+    - id: error-trace-mapper
+      name: Error Trace Mapper
+      domain: debugging
+      description: Parses stack traces and error outputs to map errors to exact source file locations. Uses git blame to identify recent changes near failure points. Cross-references error patterns with known bug patterns from debug-strategies.yaml.
+      suitable_project_types:
+        - web
+        - mobile
+        - backend
+        - desktop
+        - game
+        - cli
+        - data
+        - iot
+      key_concerns:
+        - stack_trace_parsing
+        - source_mapping
+        - git_blame_analysis
+        - error_pattern_matching
+        - failure_point_identification
+      recommended_when: []
+      model: sonnet
+
+    - id: impact-analyzer
+      name: Impact Analyzer
+      domain: debugging
+      description: Searches the entire codebase for instances of the same bug pattern. Identifies all locations where the same error could occur, producing a comprehensive impact report with file paths and line numbers for preventive fixes.
+      suitable_project_types:
+        - web
+        - mobile
+        - backend
+        - desktop
+        - game
+        - cli
+        - data
+        - iot
+      key_concerns:
+        - pattern_search
+        - codebase_wide_analysis
+        - similar_code_detection
+        - impact_scope_assessment
+        - preventive_fix_identification
+      recommended_when: []
+      model: sonnet
+
+    - id: runtime-inspector
+      name: Runtime Inspector
+      domain: debugging
+      description: Adds targeted debug instrumentation to capture runtime state at failure points. Executes instrumented code, captures variable values and execution flow, then cleanly removes all instrumentation. Produces a runtime state snapshot for diagnosis.
+      suitable_project_types:
+        - web
+        - mobile
+        - backend
+        - desktop
+        - cli
+        - data
+      key_concerns:
+        - debug_instrumentation
+        - runtime_state_capture
+        - variable_inspection
+        - execution_flow_tracing
+        - clean_instrumentation_removal
+      recommended_when: []
+      model: sonnet

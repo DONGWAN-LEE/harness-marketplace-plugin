@@ -27,6 +27,7 @@ const REQUIRED_FILES = [
 const CONDITIONAL_FILES = {
   'visual-qa/SKILL.md': 'has_ui',
   'visual-qa/scripts/visual-inspect.js': 'has_ui',
+  'debug/SKILL.md': null, // optional for all projects (bugfix debug phase)
 };
 
 const REQUIRED_CONFIG_FIELDS = [

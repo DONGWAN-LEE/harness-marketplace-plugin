@@ -66,6 +66,9 @@ All option data is loaded from the plugin's `data/` directory:
 - `data/hook-patterns.yaml` — hook pattern catalog for enforcement
 - `data/ci-cd-pipelines.yaml` — CI/CD pipeline catalog
 - `data/enforcement-rules.yaml` — enforcement presets and tech-stack rules
+- `data/agents.yaml` — verification agent catalog by domain (34 agents, 11 domains)
+- `data/guides.yaml` — development guide catalog by domain (18 guides)
+- `data/debug-strategies.yaml` — error-type debugging strategy catalog for debug phase
 
 The plugin root is available via `${CLAUDE_PLUGIN_ROOT}` or can be found at `~/.claude/plugins/cache/*/harness-marketplace/*/`.
 </Data_Sources>
@@ -795,53 +798,68 @@ If found:
 
 ### Step B: Agent Selection
 ```
-AI generates recommended agent list based on all answers.
-Consider: project type, security needs, performance concerns, UI presence, DB type, etc.
+Load data/agents.yaml.
+
+Step 1 — Hard filter:
+  Remove agents where suitable_project_types does NOT include project_type.category.
+
+Step 2 — Soft rank:
+  AI ranks remaining agents by:
+  - Matching key_concerns against the project's subcategory/purpose concerns
+  - Matching recommended_when flags against derived classification flags (has_ui, has_backend, has_database, has_auth, has_realtime)
+  - Tech stack compatibility
+
+Step 3 — Show ALL filtered agents grouped by domain (typically 12-18 options).
 
 AskUserQuestion:
   question: "Which verification agents should be included in your harness? (select all)"
   header: "Agents"
   multiSelect: true
-  options: (AI-generated, pre-checked for recommended)
-    Example:
-    - label: "security-reviewer"
-      description: "Reviews code for security vulnerabilities: injection, XSS, auth bypass, secrets exposure. Essential for web/API projects."
-    - label: "performance-auditor"
-      description: "Analyzes code for performance issues: N+1 queries, memory leaks, bundle size, render performance."
-    - label: "accessibility-checker"
-      description: "Validates WCAG compliance: semantic HTML, ARIA labels, keyboard navigation, color contrast. For UI projects."
-    - label: "db-auditor"
-      description: "Reviews database queries, migrations, indexes. Checks for slow queries and data integrity issues."
+  options: (all agents from data/agents.yaml that pass the hard filter, grouped by domain)
+    Format per option:
+    - label: "{name}"
+      description: "{description}"
+    Pre-check agents whose recommended_when flags match the project's derived flags.
 
 If recommendation_mode:
-  Analyze context.project_description for security, performance, accessibility, DB concerns.
-  Append " (Recommended — {reason})" to the top 2-3 matching agent labels.
+  Analyze context.project_description + all prior answers against each agent's
+  key_concerns, recommended_when, and suitable_project_types.
+  Append " (Recommended — {reason})" to the top 3-5 matching agent labels.
+  Example: "Security Reviewer (Recommended — essential for API projects with auth)"
 
 Store as: agents[]
 ```
 
 ### Step C: Guide Selection
 ```
-AI generates recommended guide list based on all answers.
+Load data/guides.yaml.
+
+Step 1 — Hard filter:
+  Remove guides where suitable_project_types does NOT include project_type.category.
+
+Step 2 — Soft rank:
+  AI ranks remaining guides by:
+  - Matching key_topics against the project's subcategory/purpose concerns
+  - Matching recommended_when flags against derived classification flags
+  - Tech stack relevance
+
+Step 3 — Show ALL filtered guides grouped by domain (typically 8-12 options).
 
 AskUserQuestion:
   question: "Which development guides should be generated? (select all)"
   header: "Guides"
   multiSelect: true
-  options: (AI-generated, pre-checked for recommended)
-    Example:
-    - label: "api-design"
-      description: "REST/GraphQL API design guidelines: naming conventions, error handling, pagination, versioning."
-    - label: "database-design"
-      description: "Database schema design, migration safety, indexing strategy, query optimization rules."
-    - label: "auth-security"
-      description: "Authentication and authorization patterns: token handling, session management, RBAC/ABAC."
-    - label: "testing-strategy"
-      description: "Test organization, coverage targets, mocking guidelines, CI integration for the chosen test framework."
+  options: (all guides from data/guides.yaml that pass the hard filter, grouped by domain)
+    Format per option:
+    - label: "{name}"
+      description: "{description}"
+    Pre-check guides whose recommended_when flags match the project's derived flags.
 
 If recommendation_mode:
-  Analyze context.project_description for relevant development domains.
+  Analyze context.project_description + all prior answers against each guide's
+  key_topics, recommended_when, and suitable_project_types.
   Append " (Recommended — {reason})" to the top 2-3 matching guide labels.
+  Example: "Database Design Guide (Recommended — essential for Supabase schema management)"
 
 Store as: guides[]
 ```
@@ -914,29 +932,38 @@ Conditional:
 
 ### Step 5.3: AI-Generate Specialized Files
 ```
-For each selected agent, spawn an AI generation task:
+For each selected agent, load its full entry from data/agents.yaml and spawn an AI generation task:
 
 Prompt pattern for agents:
 "Generate a Claude Code agent definition markdown file for a {agent_name} agent.
 Project context: {project_type}, {tech_stack}, {platform}.
+Agent catalog metadata:
+  - Domain: {domain}
+  - Description: {description}
+  - Key concerns to validate: {key_concerns}
 The agent should include:
-- Frontmatter: name, description, model (sonnet for standard, opus for critical)
-- Role description
-- Required validation checklist (10-15 items specific to this project's tech stack)
+- Frontmatter: name, description, model ({model from catalog, default sonnet})
+- Role description based on the agent's domain and catalog description
+- Required validation checklist (10-15 items specific to this project's tech stack,
+  covering the key_concerns from the catalog)
 - Constraints
 - Output format
 Reference the game-harness agent format: name, description, model, checklist items."
 
 Write to: .claude/skills/project-harness/agents/{agent_name}.md
 
-For each selected guide, spawn an AI generation task:
+For each selected guide, load its full entry from data/guides.yaml and spawn an AI generation task:
 
 Prompt pattern for guides:
 "Generate a development guide for {guide_name} tailored to: {project_type} using {tech_stack}.
+Guide catalog metadata:
+  - Domain: {domain}
+  - Description: {description}
+  - Key topics to cover: {key_topics}
 Include:
 - Purpose and scope
-- Key rules and conventions (10-20 rules)
-- Examples with code snippets
+- Key rules and conventions (10-20 rules, covering the key_topics from the catalog)
+- Examples with code snippets using the project's actual tech stack
 - Common mistakes to avoid
 - Integration with the project's specific tech stack"
 

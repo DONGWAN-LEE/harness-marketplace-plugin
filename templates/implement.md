@@ -38,9 +38,18 @@ All workers and conditional checks are driven by `project-config.yaml` flags —
 - When `--skip-plan` → implement from task description only (classification done internally)
 - When neither specified → internally invoke project-plan skill (classify → explore → design → confirm)
 
+### Obtain DebugResult (bugfix only)
+
+- When `--debug-result` is passed → Read from that file path (e.g., `state/results/debug.json`)
+- When debug was skipped → DebugResult either missing or `{ "skipped": true }` — proceed normally
+- When DebugResult contains confirmed root cause:
+  - Inject `root_cause`, `affected_files`, and `recommended_fix` into fixer worker prompt
+  - Inject `impact.same_pattern_locations` into test-writer worker prompt (test all affected locations)
+  - Skip hypothesis exploration in fixer — go directly to implementing the fix
+
 ### Check Classification
 
-Extract type, has_ui, has_backend, has_database, has_auth, has_realtime, and any config-defined domain flags from PlanResult to determine worker composition.
+Extract type, has_ui, has_backend, has_database, has_auth, has_realtime, debug_complexity, and any config-defined domain flags from PlanResult to determine worker composition.
 
 ---
 
@@ -137,8 +146,16 @@ scaffolder → implementer → ux-checker (has_ui) → integrator → db-checker
 ### Single mode (`--no-team`)
 
 ```
-Step 1: Write reproduction test (failing test)
-Step 2: Direct fix (Read → Edit)
+Step 0 (new): Load DebugResult if available (--debug-result)
+Step 1: Write reproduction test
+  - When DebugResult available: use reproduction.command and reproduction.error_message as test basis
+  - When DebugResult has impact locations: write tests for ALL affected locations
+  - When no DebugResult: write failing test from task description
+Step 2: Fix bug
+  - When DebugResult.root_cause.confirmed: apply recommended_fix directly (skip investigation)
+  - When DebugResult not confirmed: use hypotheses as investigation guide
+  - When no DebugResult: standard Read → investigate → Edit
+Step 2.5 (when DebugResult has impact locations): Fix same bug pattern at all impact.same_pattern_locations
 Step 3: Verify test passes ({config.commands.test})
 Step 4 (when has_backend): Security guide validation from config
 Step 5 (common build gate)
@@ -148,13 +165,18 @@ Step 5 (common build gate)
 
 | Order | Role | subagent_type | Responsibility |
 |-------|------|--------------|---------------|
-| 1 | test-writer | Agent (model="sonnet", description="Test engineering") | Write reproduction test |
-| 2 | fixer | general-purpose | Fix bug + verify test passes |
+| 1 | test-writer | Agent (model="sonnet", description="Test engineering") | Write reproduction test + tests for impact locations |
+| 2 | fixer | general-purpose | Fix bug guided by DebugResult.root_cause + recommended_fix |
+| 2.5 | impact-fixer | general-purpose | Fix same pattern at DebugResult.impact.same_pattern_locations (only when DebugResult has impact data) |
 | 3 | test-runner | Agent (model="sonnet", description="Verification") | Run full test suite |
 | 4 | build-checker | Agent (model="sonnet", description="Verification") | typecheck + build |
 
 ```
-test-writer → fixer → test-runner → build-checker
+When DebugResult available:
+  test-writer (with impact data) → fixer (with root_cause) → impact-fixer → test-runner → build-checker
+
+When no DebugResult:
+  test-writer → fixer → test-runner → build-checker
 ```
 
 ---
