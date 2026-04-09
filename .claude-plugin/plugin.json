@@ -1,5 +1,7 @@
 {
   "name": "harness-marketplace",
-  "version": "0.1.0",
-  "description": "Scaffolding wizard that generates project-specific development pipeline harness skills"
+  "version": "0.2.0",
+  "description": "Scaffolding wizard that generates project-specific development pipeline harness skills",
+  "skills": "./skills/",
+  "mcpServers": {}
 }
