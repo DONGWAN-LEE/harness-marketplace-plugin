@@ -38,7 +38,7 @@ Generate a complete development pipeline — plan, implement, visual-qa, verify 
 ## Installation
 
 ```bash
-/plugin marketplace add <repo-url>
+/plugin marketplace add https://github.com/DONGWAN-LEE/harness-marketplace-plugin.git
 /plugin install harness-marketplace
 ```
 

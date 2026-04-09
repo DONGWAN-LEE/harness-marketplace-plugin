@@ -38,7 +38,7 @@
 ## 설치
 
 ```bash
-/plugin marketplace add <repo-url>
+/plugin marketplace add https://github.com/DONGWAN-LEE/harness-marketplace-plugin.git
 /plugin install harness-marketplace
 ```
 
