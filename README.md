@@ -21,10 +21,11 @@ Generate a complete development pipeline — plan, implement, visual-qa, verify 
   ├─ Generates a full harness skill set
   │   ├── project-config.yaml       — master config driving everything
   │   ├── plan/SKILL.md             — planning phase
+  │   ├── debug/SKILL.md            — debug investigation phase (bugfix only)
   │   ├── implement/SKILL.md        — implementation phase
   │   ├── visual-qa/SKILL.md        — visual QA (if UI project)
   │   ├── verify/SKILL.md           — verification phase
-  │   ├── agents/*.md               — AI-generated domain agents
+  │   ├── agents/*.md               — AI-generated domain agents (from 34-agent catalog)
   │   ├── guides/*.md               — AI-generated development guides
   │   ├── hooks/*.sh                — code enforcement via Claude Code hooks
   │   ├── hooks-config.json         — hook configuration for settings.json
@@ -167,8 +168,8 @@ Detected:
 | C2 | Pipelines | CI, AI Code Review, Deploy, Security... (multi-select) |
 | C3 | AI review config | Comment only / Block on critical / Auto-approve |
 | L1 | Self-learning | With approval / Automatic / Disabled |
-| A | Agents | security-reviewer, performance-auditor... (multi-select) |
-| G | Guides | api-design, database-design... (multi-select) |
+| A | Agents | security-reviewer, performance-auditor, game-economy-auditor... (25 catalog, multi-select) |
+| G | Guides | api-design, database-design, game-design... (18 catalog, multi-select) |
 
 When a project description is provided (manual mode) or interview is used, AI tags the best options with `(Recommended — reason)` labels. All options are still shown.
 
@@ -257,7 +258,7 @@ Automates Issue → Branch → Commit → PR workflow:
 
 ---
 
-## Three Layers Beyond Markdown
+## Four Layers Beyond Markdown
 
 ### Layer 1: Hook-based Code Enforcement
 
@@ -310,6 +311,32 @@ AI makes mistake → Regression detected → Fix applied →
   → Same mistake can never happen again
 ```
 
+### Layer 4: Debug Investigation Phase
+
+For bugfix tasks, a **systematic debug phase** runs between plan and implement — replacing guesswork with parallel investigation:
+
+```
+/project-harness "fix login 500 error"
+  │
+  ├─ plan (explore + design)
+  │
+  ├─ debug (only for bugfix, skipped for simple bugs)
+  │   ├── Reproduce error → capture stack trace + output
+  │   ├── Generate 3-5 hypotheses ranked by likelihood
+  │   ├── Parallel investigation (4 agents simultaneously):
+  │   │   ├── root-cause-analyst — tests top hypotheses against code
+  │   │   ├── error-trace-mapper — maps stack trace + git blame
+  │   │   ├── impact-analyzer — searches codebase for same pattern
+  │   │   └── runtime-inspector — captures variable state at failure
+  │   ├── Git bisection (for complex bugs when needed)
+  │   └── Evidence → DebugResult with confirmed root cause
+  │
+  ├─ implement (guided by DebugResult → targeted fix + impact fixes)
+  └─ verify
+```
+
+**Smart routing** — simple bugs (typo, missing import) skip the debug phase. Complex bugs (race condition, intermittent, multi-file) get full investigation. Controlled by `debug_complexity` scoring (low/medium/high).
+
 ---
 
 ## How It Works
@@ -318,12 +345,12 @@ AI makes mistake → Regression detected → Fix applied →
 
 | Component | Method | Source |
 |-----------|--------|--------|
-| SKILL.md files (orchestrator, plan, implement, verify) | **Template** | `templates/*.md` |
+| SKILL.md files (orchestrator, plan, debug, implement, verify) | **Template** | `templates/*.md` |
 | project-config.yaml | **Mapped** | Wizard answers → YAML schema |
 | Hook scripts (hooks/*.sh) | **Template** | `templates/hooks/*.sh.template` |
 | CI/CD workflows (.github/workflows/*.yml) | **Template** | `templates/ci-cd/github-actions/*.yml.template` |
-| agents/*.md | **AI Generated** | Claude generates project-specific agent checklists |
-| guides/*.md | **AI Generated** | Claude generates project-specific development guides |
+| agents/*.md | **AI Generated** | Claude generates project-specific agent checklists from data/agents.yaml catalog (34 agents) |
+| guides/*.md | **AI Generated** | Claude generates project-specific development guides from data/guides.yaml catalog (18 guides) |
 | classification.md | **AI Generated** | Project-specific classification rules |
 
 ### Config-Driven Pipeline
@@ -406,16 +433,17 @@ harness-marketplace/
 ├── templates/                     # Harness skeleton templates
 │   ├── orchestrator.md            # Pipeline orchestrator
 │   ├── plan.md                    # Planning phase
+│   ├── debug.md                   # Debug investigation phase (bugfix only)
 │   ├── implement.md               # Implementation phase (with Learning Loop)
 │   ├── visual-qa.md               # Visual QA phase
 │   ├── verify.md                  # Verification phase (with Learning Loop)
 │   ├── self-learning.md           # Self-learning engine
 │   ├── config-schema.yaml         # Config schema (context, enforcement, ci_cd, self_learning)
-│   ├── classification.md          # Task classification rules
+│   ├── classification.md          # Task classification rules (with debug complexity)
 │   ├── hooks/                     # Hook script templates (8 scripts + config)
 │   └── ci-cd/                     # CI/CD workflow templates
 │       └── github-actions/        # 5 workflow templates
-├── data/                          # Deep-researched option datasets (11 files)
+├── data/                          # Deep-researched option datasets (14 files)
 ├── scripts/
 │   ├── validate-harness.js        # Full validation (structure, hooks, CI/CD, self-learning)
 │   └── merge-hooks.js             # Non-destructive settings.json hook merger

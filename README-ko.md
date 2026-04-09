@@ -21,10 +21,11 @@
   ├─ 완전한 harness 스킬 세트 생성
   │   ├── project-config.yaml       — 모든 것을 결정하는 마스터 설정
   │   ├── plan/SKILL.md             — 계획 단계
+  │   ├── debug/SKILL.md            — 디버그 조사 단계 (bugfix 전용)
   │   ├── implement/SKILL.md        — 구현 단계
   │   ├── visual-qa/SKILL.md        — 시각적 QA (UI 프로젝트인 경우)
   │   ├── verify/SKILL.md           — 검증 단계
-  │   ├── agents/*.md               — AI 생성 도메인 에이전트
+  │   ├── agents/*.md               — AI 생성 도메인 에이전트 (34개 카탈로그 기반)
   │   ├── guides/*.md               — AI 생성 개발 가이드
   │   ├── hooks/*.sh                — Claude Code hook 기반 코드 강제
   │   ├── hooks-config.json         — settings.json용 hook 설정
@@ -167,8 +168,8 @@ AI 추천:
 | C2 | 파이프라인 | CI, AI 코드리뷰, 배포, 보안... (복수 선택) |
 | C3 | AI 리뷰 설정 | 코멘트만 / Critical 시 차단 / 자동 Approve |
 | L1 | 자기 학습 | 승인 후 학습 / 자동 학습 / 비활성화 |
-| A | 에이전트 선택 | security-reviewer, performance-auditor... (복수 선택) |
-| G | 가이드 선택 | api-design, database-design... (복수 선택) |
+| A | 에이전트 선택 | security-reviewer, performance-auditor, game-economy-auditor... (25개 카탈로그, 복수 선택) |
+| G | 가이드 선택 | api-design, database-design, game-design... (18개 카탈로그, 복수 선택) |
 
 프로젝트 설명이 제공되면 (Manual 모드) 또는 인터뷰가 사용되면, AI가 각 단계에서 최적의 옵션에 `(Recommended — 이유)` 라벨을 표시합니다. 모든 옵션은 항상 표시됩니다.
 
@@ -257,7 +258,7 @@ Issue → Branch → Commit → PR 워크플로우를 자동 수행합니다:
 
 ---
 
-## 마크다운을 넘어서 — 3개의 레이어
+## 마크다운을 넘어서 — 4개의 레이어
 
 ### Layer 1: Hook 기반 코드 강제
 
@@ -310,6 +311,32 @@ AI가 실수 → 회귀 감지 → 수정 적용 →
   → 같은 실수가 다시는 발생하지 않음
 ```
 
+### Layer 4: 디버그 조사 단계
+
+버그 수정 작업 시, plan과 implement 사이에 **체계적 디버그 단계**가 실행됩니다 — 추측 대신 병렬 조사:
+
+```
+/project-harness "fix 로그인 500 에러"
+  │
+  ├─ plan (탐색 + 설계)
+  │
+  ├─ debug (bugfix 전용, 단순 버그는 스킵)
+  │   ├── 에러 재현 → 스택 트레이스 + 출력 캡처
+  │   ├── 3-5개 가설 생성 (가능성 순위)
+  │   ├── 병렬 조사 (4개 에이전트 동시 실행):
+  │   │   ├── root-cause-analyst — 상위 가설 검증
+  │   │   ├── error-trace-mapper — 스택 트레이스 매핑 + git blame
+  │   │   ├── impact-analyzer — 코드베이스 전체 동일 패턴 검색
+  │   │   └── runtime-inspector — 실패 지점 변수 상태 캡처
+  │   ├── Git bisection (복잡한 버그 시 조건부)
+  │   └── 증거 수집 → DebugResult (확인된 근본 원인)
+  │
+  ├─ implement (DebugResult 활용 → 정확한 수정 + 영향 범위 수정)
+  └─ verify
+```
+
+**스마트 라우팅** — 단순 버그(오타, 누락된 import)는 디버그 단계를 스킵합니다. 복잡한 버그(레이스 컨디션, 간헐적, 다중 파일)는 전체 조사를 수행합니다. `debug_complexity` 점수(low/medium/high)로 제어됩니다.
+
 ---
 
 ## 동작 원리
@@ -318,12 +345,12 @@ AI가 실수 → 회귀 감지 → 수정 적용 →
 
 | 구성요소 | 방식 | 출처 |
 |---------|------|------|
-| SKILL.md 파일 (orchestrator, plan, implement, verify) | **템플릿** | `templates/*.md` |
+| SKILL.md 파일 (orchestrator, plan, debug, implement, verify) | **템플릿** | `templates/*.md` |
 | project-config.yaml | **매핑** | 위자드 답변 → YAML 스키마 |
 | Hook 스크립트 (hooks/*.sh) | **템플릿** | `templates/hooks/*.sh.template` |
 | CI/CD 워크플로우 (.github/workflows/*.yml) | **템플릿** | `templates/ci-cd/github-actions/*.yml.template` |
-| agents/*.md | **AI 생성** | Claude가 프로젝트 특화 에이전트 체크리스트 생성 |
-| guides/*.md | **AI 생성** | Claude가 프로젝트 특화 개발 가이드 생성 |
+| agents/*.md | **AI 생성** | data/agents.yaml 카탈로그(34개) 기반 프로젝트 특화 에이전트 체크리스트 생성 |
+| guides/*.md | **AI 생성** | data/guides.yaml 카탈로그(18개) 기반 프로젝트 특화 개발 가이드 생성 |
 | classification.md | **AI 생성** | 프로젝트 특화 분류 규칙 |
 
 ### Config 기반 파이프라인
@@ -406,16 +433,17 @@ harness-marketplace/
 ├── templates/                     # Harness 골격 템플릿
 │   ├── orchestrator.md            # 파이프라인 오케스트레이터
 │   ├── plan.md                    # 계획 단계
+│   ├── debug.md                   # 디버그 조사 단계 (bugfix 전용)
 │   ├── implement.md               # 구현 단계 (Learning Loop 포함)
 │   ├── visual-qa.md               # 시각적 QA 단계
 │   ├── verify.md                  # 검증 단계 (Learning Loop 포함)
 │   ├── self-learning.md           # 자기 학습 엔진
 │   ├── config-schema.yaml         # 설정 스키마 (context, enforcement, ci_cd, self_learning)
-│   ├── classification.md          # 작업 분류 규칙
+│   ├── classification.md          # 작업 분류 규칙 (디버그 복잡도 포함)
 │   ├── hooks/                     # Hook 스크립트 템플릿 (8개 스크립트 + 설정)
 │   └── ci-cd/                     # CI/CD 워크플로우 템플릿
 │       └── github-actions/        # 5개 워크플로우 템플릿
-├── data/                          # 딥리서치 옵션 데이터셋 (11개 파일)
+├── data/                          # 딥리서치 옵션 데이터셋 (14개 파일)
 ├── scripts/
 │   ├── validate-harness.js        # 전체 검증 (구조, hook, CI/CD, 자기학습)
 │   └── merge-hooks.js             # settings.json 비파괴적 hook 머지

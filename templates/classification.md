@@ -23,6 +23,62 @@ When `--type` is explicitly specified, skip auto-classification.
 
 ---
 
+## Debug Complexity Assessment (bugfix only)
+
+When `type == "bugfix"`, assess debug complexity to determine whether the debug phase runs.
+
+| Complexity | Criteria | Debug Phase |
+|------------|----------|-------------|
+| **low** | Single keyword match (typo, missing import, syntax), <=1 file mentioned, error message is self-explanatory | Skip |
+| **medium** | Multiple files involved, error requires tracing, stack trace mentioned, "not working" without clear cause | Full |
+| **high** | Intermittent/flaky, concurrency/timing keywords, multi-service, "race condition", "deadlock", "sometimes" | Full |
+
+### Detection Keywords
+
+| Complexity | Keywords |
+|------------|----------|
+| low | typo, missing import, syntax error, undefined variable, wrong name, rename, spelling |
+| medium | not working, failing test, wrong output, unexpected behavior, error in, broken, stack trace |
+| high | intermittent, flaky, sometimes, race condition, deadlock, timeout, concurrency, multi-service, distributed |
+
+### Escalation Rules
+
+- If task mentions more than 3 files: minimum `medium`
+- If task mentions "production" or "prod": minimum `medium`
+- If task mentions "intermittent", "flaky", or "sometimes": always `high`
+- If user provides a stack trace in the task description: parse depth → >5 levels = `high`, 2-5 = `medium`
+- When `type != "bugfix"`: `debug_complexity = "none"` (debug phase never runs)
+
+### Scoring Algorithm
+
+```
+score = 0
+
+// Keyword analysis
+if task mentions "intermittent|flaky|sometimes|random": score += 30
+if task mentions "race condition|deadlock|concurrent": score += 30
+if task mentions "multi-service|distributed|microservice": score += 20
+if task mentions "production|prod|live": score += 10
+if task mentions "typo|missing import|syntax": score -= 20
+if task mentions "rename|spelling": score -= 20
+
+// File scope analysis (from plan exploration if available)
+files_involved = count of mentioned or affected files
+if files_involved > 5: score += 20
+elif files_involved > 2: score += 10
+
+// Stack trace analysis (if provided in task description)
+if stack_trace_depth > 7: score += 20
+elif stack_trace_depth > 3: score += 10
+
+// Determination
+if score < 0: debug_complexity = "low"
+elif score < 20: debug_complexity = "medium"
+else: debug_complexity = "high"
+```
+
+---
+
 ## Flag Detection
 
 Flags are derived from a combination of:
@@ -164,6 +220,7 @@ Each agent entry in the marketplace catalog defines:
 ```json
 {
   "type": "feature|bugfix|refactor|config",
+  "debug_complexity": "none|low|medium|high",
   "has_ui": true,
   "has_backend": true,
   "has_database": false,
@@ -181,7 +238,7 @@ Each agent entry in the marketplace catalog defines:
 🏷️ Classification complete
    → type: feature | has_ui: true | has_backend: true | has_database: false
    → has_auth: true | has_realtime: false | visual_qa: enabled
-   → agents: security-auditor
+   → debug: none | agents: security-auditor
 ```
 
 ---

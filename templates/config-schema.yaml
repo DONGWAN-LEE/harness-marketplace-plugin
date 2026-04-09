@@ -505,6 +505,16 @@ properties:
           Controls whether project-visual-qa phase is included in the pipeline.
         example: true
 
+      debug_complexity:
+        type: string
+        description: >
+          Auto-derived for bugfix tasks at classification time. Determines whether the
+          project-debug phase runs. "low" skips the debug phase, "medium" and "high" trigger
+          full debug investigation. Only populated when type == "bugfix".
+        enum: [none, low, medium, high]
+        default: none
+        example: "medium"
+
   # ─── Agents ───────────────────────────────────────────────────────────────
 
   agents:
