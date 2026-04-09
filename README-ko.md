@@ -40,7 +40,10 @@
 ```bash
 /plugin marketplace add https://github.com/DONGWAN-LEE/harness-marketplace-plugin.git
 /plugin install harness-marketplace
+/reload-plugins
 ```
+
+> **참고:** 설치 후 반드시 `/reload-plugins`를 실행해야 현재 세션에 스킬이 로드됩니다. 이 단계를 건너뛰면 `/harness-marketplace:wizard` 실행 시 `Unknown skill` 오류가 발생합니다.
 
 또는 수동 설치:
 

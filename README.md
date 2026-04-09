@@ -40,7 +40,10 @@ Generate a complete development pipeline — plan, implement, visual-qa, verify 
 ```bash
 /plugin marketplace add https://github.com/DONGWAN-LEE/harness-marketplace-plugin.git
 /plugin install harness-marketplace
+/reload-plugins
 ```
+
+> **Note:** After installation, you must run `/reload-plugins` to load the new skills into the current session. Without this step, running `/harness-marketplace:wizard` will show `Unknown skill`.
 
 Or install manually:
 
