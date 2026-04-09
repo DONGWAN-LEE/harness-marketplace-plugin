@@ -40,10 +40,9 @@
 ```bash
 /plugin marketplace add https://github.com/DONGWAN-LEE/harness-marketplace-plugin.git
 /plugin install harness-marketplace
-/reload-plugins
 ```
 
-> **참고:** 설치 후 반드시 `/reload-plugins`를 실행해야 현재 세션에 스킬이 로드됩니다. 이 단계를 건너뛰면 `/harness-marketplace:wizard` 실행 시 `Unknown skill` 오류가 발생합니다.
+> **중요:** 설치 후 반드시 **Claude Code를 완전히 종료하고 새 세션을 시작**해야 합니다. `/reload-plugins`는 commands만 reload하고 **skills는 reload하지 않는** 알려진 버그([#35641](https://github.com/anthropics/claude-code/issues/35641))가 있습니다. 세션을 완전히 재시작하지 않으면 `/harness-marketplace:wizard` 실행 시 `Unknown skill` 오류가 발생합니다.
 
 또는 수동 설치:
 

@@ -40,10 +40,9 @@ Generate a complete development pipeline — plan, implement, visual-qa, verify 
 ```bash
 /plugin marketplace add https://github.com/DONGWAN-LEE/harness-marketplace-plugin.git
 /plugin install harness-marketplace
-/reload-plugins
 ```
 
-> **Note:** After installation, you must run `/reload-plugins` to load the new skills into the current session. Without this step, running `/harness-marketplace:wizard` will show `Unknown skill`.
+> **Important:** After installation, you must **completely quit Claude Code and start a new session**. `/reload-plugins` reloads commands but does **not** reload skills due to a known bug ([#35641](https://github.com/anthropics/claude-code/issues/35641)). Without a full restart, `/harness-marketplace:wizard` will show `Unknown skill`.
 
 Or install manually:
 
