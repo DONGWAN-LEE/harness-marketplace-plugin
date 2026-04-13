@@ -181,15 +181,38 @@ When a project description is provided (manual mode) or interview is used, AI ta
 
 ### Upgrade an existing harness
 
+> 📖 **Full step-by-step guide: [UPGRADE.md](./UPGRADE.md)**
+
+Upgrading is **two steps, in order**:
+
+**Step 1 — Update the plugin itself** (once per release):
+
+```
+/plugin          # inside Claude Code → Marketplaces → harness-marketplace
+                 # → Update marketplace, then Update plugin → restart Claude Code
+```
+
+Skipping this step is the #1 reason `/upgrade` reports "already on the latest version" — the cached plugin (e.g. v0.3.0) compares itself to itself.
+
+**Step 2 — Upgrade each project's harness** (once per project per release):
+
 ```bash
+cd <your-project>
 /harness-marketplace:upgrade
 ```
 
-Automatically checks GitHub for the latest version and fetches templates directly — no need to manually update the plugin first. One command does everything. Falls back to local plugin cache when offline (`--offline`).
+The upgrade skill auto-fetches the latest templates from GitHub (v0.4.0+), preserves your `project-config.yaml`, hook Custom Rules, and `learning-log.yaml`, and writes a timestamped backup to `.claude/backups/project-harness-{timestamp}/`. Use `--offline` to force the local plugin cache, `--preview` to see the plan without applying, `--backup-only` to snapshot without upgrading.
 
-Preserves your `project-config.yaml`, hook Custom Rules, and `learning-log.yaml` while updating template-based skill files to the latest version.
+**Legacy v1.x hook auto-migration** (since v0.5.1): if the upgrade detects that your project was generated against the old v1.x hook contract (silent no-ops under Claude Code v2.x — see [#16](https://github.com/aiAgentDevelop/harness-marketplace-plugin/issues/16)), the entire `hooks/` directory is replaced with the v2.x format. Your old hooks live in the backup; copy any Custom Rules manually from there. The upgrade will also offer to replace the hook entries in `.claude/settings.json` — **accept this**, otherwise Claude Code won't actually register the new hooks.
 
-**Legacy v1.x hook auto-migration** (since v0.5.1): if the upgrade detects that your project was generated against the old v1.x hook contract (silent no-ops under Claude Code v2.x — see #16), the entire `hooks/` directory is replaced with the v2.x format. Your old hooks are preserved in the timestamped backup directory; if you had Custom Rules, copy them manually from there.
+**Verify** after a completed upgrade:
+
+```bash
+claude --debug-file /tmp/d.log      # start and immediately Ctrl+C
+grep "Registered.*hooks" /tmp/d.log # expect N > 0
+```
+
+See [UPGRADE.md](./UPGRADE.md) for the full flow, troubleshooting (e.g. "Registered 0 hooks", backup-as-duplicate-skill), end-to-end verification, and rollback steps.
 
 ---
 
@@ -472,7 +495,9 @@ harness-marketplace/
 ├── NOTICE                         # Attribution
 ├── package.json
 ├── README.md
-└── README-ko.md
+├── README-ko.md
+├── UPGRADE.md                     # Step-by-step upgrade guide (EN)
+└── UPGRADE-ko.md                  # Step-by-step upgrade guide (KO)
 ```
 
 ## Requirements
