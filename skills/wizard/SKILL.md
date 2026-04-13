@@ -1005,7 +1005,19 @@ Create:
 Load data/hook-patterns.yaml and data/enforcement-rules.yaml.
 Determine active hooks from enforcement preset + tech_stack_rules.
 
-For each active hook category, load the corresponding template from templates/hooks/:
+Hook contract (Claude Code v2.x):
+  - Hooks read tool_input as JSON from stdin (NOT from $1 argv or $CLAUDE_TOOL_INPUT_* env vars)
+  - PreToolUse blocking exit code is 2 (NOT 1 — exit 1 is treated as a non-blocking error)
+  - Each generated hook sources two shared helpers via `source "$(dirname "$0")/_parse.sh"`
+    and `source "$(dirname "$0")/_log.sh"` (PostToolUse hooks source _parse.sh only;
+    SessionStart sources _log.sh only)
+
+First, copy the v2.x helpers as-is (no placeholder substitution):
+  - templates/hooks/_parse.sh → .claude/skills/project-harness/hooks/_parse.sh
+  - templates/hooks/_log.sh   → .claude/skills/project-harness/hooks/_log.sh
+  These files have no {{...}} placeholders and must NOT be templated.
+
+Then for each active hook category, load the corresponding template from templates/hooks/:
 
 1. protected-files.sh ← templates/hooks/protected-files.sh.template
    - Replace {{PROTECTED_FILES}} with enforcement.protected_files patterns
@@ -1196,6 +1208,8 @@ Display generation summary:
   │   ├── api-design.md
   │   └── ...
   ├── hooks/ ({count} hook scripts)        ← if enforcement != none
+  │   ├── _parse.sh                        ← v2.x stdin JSON parser (helper)
+  │   ├── _log.sh                          ← block event logger (helper)
   │   ├── protected-files.sh
   │   ├── post-edit-lint.sh
   │   └── ...

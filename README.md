@@ -442,7 +442,11 @@ harness-marketplace/
 │   ├── self-learning.md           # Self-learning engine
 │   ├── config-schema.yaml         # Config schema (context, enforcement, ci_cd, self_learning)
 │   ├── classification.md          # Task classification rules (with debug complexity)
-│   ├── hooks/                     # Hook script templates (8 scripts + config)
+│   ├── hooks/                     # Hook script templates (8 scripts + config + 2 v2.x helpers)
+│   │   ├── _parse.sh              # Shared: stdin JSON → TOOL_FILE_PATH/TOOL_CONTENT/TOOL_COMMAND
+│   │   ├── _log.sh                # Shared: log_block helper (writes .claude/hook-blocks.log)
+│   │   ├── *.sh.template          # 8 hook templates (read stdin, exit 2 to block)
+│   │   └── hooks-config.json.template
 │   └── ci-cd/                     # CI/CD workflow templates
 │       └── github-actions/        # 5 workflow templates
 ├── data/                          # Deep-researched option datasets (14 files)
