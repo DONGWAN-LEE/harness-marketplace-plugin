@@ -85,8 +85,13 @@ If `--preview` flag or user wants to see changes first:
    - `verify/SKILL.md`
    - `references/classification.md`
    - `references/schemas.md`
-   - `hooks/*.sh` — Generated Rules section only (Custom Rules section preserved)
-   - `hooks-config.json` (regenerated from template)
+   - `hooks/*.sh` — Generated Rules section only (Custom Rules section preserved).
+     **Exception**: if Phase 1.5 detects legacy v1.x hooks, the entire
+     `hooks/` directory is replaced (the Phase 2 backup is the recovery path).
+   - `hooks-config.json` (regenerated from template; legacy v1.x command lines
+     containing `$CLAUDE_TOOL_INPUT_*` are explicitly removed — those env vars
+     are not set under Claude Code v2.x and were causing silent no-ops)
+   - `hooks/_parse.sh`, `hooks/_log.sh` (added if missing — required v2.x helpers)
 
 2. **List files that will be preserved**:
    - `project-config.yaml`
@@ -103,6 +108,42 @@ If `--preview` flag or user wants to see changes first:
    - Version change (old → new)
    - Options: [Proceed / Regenerate AI content too / Cancel]
 
+## Phase 1.5: Detect Legacy v1.x Hooks (Issue #16)
+
+Before Phase 2, scan the existing hooks installation to determine whether it
+uses the v1.x contract (which is a silent no-op under Claude Code v2.x).
+
+```
+hook_format = "v2.x"  # default
+
+If .claude/skills/project-harness/hooks-config.json exists:
+  Read its content.
+  If the content contains "$CLAUDE_TOOL_INPUT_" anywhere in command strings:
+    hook_format = "v1.x_legacy"
+
+If .claude/skills/project-harness/hooks/_parse.sh does NOT exist
+   AND .claude/skills/project-harness/hooks/ contains any *.sh files:
+  hook_format = "v1.x_legacy"
+```
+
+The `$CLAUDE_TOOL_INPUT_*` signature is the highest-confidence indicator —
+the v2.x runtime does not set those env vars and the legacy command-line
+arg passing is what causes the silent no-op.
+
+If `hook_format == "v1.x_legacy"`:
+  - Print warning to user:
+    ```
+    ⚠️  Legacy v1.x hooks detected.
+    These hooks were silent no-ops under Claude Code v2.x — your guard
+    rules have not been firing. This upgrade will replace them with the
+    new v2.x format (stdin JSON + exit 2). The old hooks will be saved
+    to a timestamped backup directory.
+    ```
+  - Set `hook_upgrade_mode = "full_replace"` (used in Phase 3 step 2)
+
+If `hook_format == "v2.x"`:
+  - Proceed normally with `hook_upgrade_mode = "marker_based"`
+
 ## Phase 2: Backup
 
 1. **Create backup directory**: `.claude/skills/project-harness.backup-{timestamp}/`
@@ -118,15 +159,43 @@ If `--preview` flag or user wants to see changes first:
    - Write updated SKILL.md files
 
 2. **Upgrade hook scripts** (if enforcement.level != "none"):
+
+   **If hook_upgrade_mode == "v1.x_legacy" (full replace, see Phase 1.5)**:
+   - The Phase 2 backup already preserved the old hooks in
+     `.claude/skills/project-harness.backup-{timestamp}/hooks/`.
+   - Delete the existing `hooks/` directory entirely.
+   - Re-create `hooks/` from scratch using the new v2.x templates:
+     a. Copy `_parse.sh` and `_log.sh` as-is (no placeholder substitution)
+     b. Generate each `*.sh` from `*.sh.template` with full placeholder + condition substitution
+     c. Generate `hooks-config.json` from `hooks-config.json.template`
+   - Custom Rules sections are NOT carried over (v1.x users typically had
+     no marker, and the legacy rules wouldn't have been firing anyway).
+     If the user had hand-edited the legacy hooks, point them at the
+     backup with a clear message:
+     ```
+     ⚠️  v1.x hooks fully regenerated. If you had Custom Rules in any hook,
+     copy them manually from:
+         .claude/skills/project-harness.backup-{timestamp}/hooks/
+     into the new files (look for the "═══ CUSTOM RULES BELOW ═══" marker).
+
+     Run `claude --debug-file /tmp/hook-debug.log` after restart and grep for
+     "Registered N hooks" to verify hooks now load.
+     ```
+
+   **If hook_upgrade_mode == "marker_based" (normal v2.x → v2.x upgrade)**:
    - For each hook script in `hooks/*.sh`:
-     a. Read existing file
-     b. Extract Custom Rules section (everything below `═══ CUSTOM RULES` marker)
-     c. Re-generate the Generated Rules section from latest template
-     d. Append preserved Custom Rules section
-     e. Write updated file
+     a. Skip helper files (`_parse.sh`, `_log.sh`) — overwrite them as-is from templates
+     b. Read existing file
+     c. Extract Custom Rules section (everything below `═══ CUSTOM RULES` marker)
+     d. Re-generate the Generated Rules section from latest template
+     e. Append preserved Custom Rules section
+     f. Write updated file
    - Regenerate `hooks-config.json` from template
    - If new hook types were added in this version, generate new hook scripts
+
+   In both modes:
    - Offer to re-merge hooks into settings.json
+   - Run `scripts/validate-harness.js` and report any v2.x compliance failures
 
 3. **Upgrade CI/CD workflows** (if ci_cd.platform not in ["none", "deferred"]):
    - Only regenerate if user selected "Regenerate CI/CD" option

@@ -5,6 +5,24 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.5.1] - 2026-04-13
+
+### Added
+- **`upgrade` skill detects and migrates legacy v1.x hooks** — When `/upgrade`
+  runs on a project whose hooks-config.json still references
+  `$CLAUDE_TOOL_INPUT_*` (the v1.x contract that became a silent no-op under
+  Claude Code v2.x), the entire `hooks/` directory is replaced with the new
+  v2.x templates. The Phase 2 backup remains the recovery path for any
+  hand-edited Custom Rules.
+- New Phase 1.5 in `skills/upgrade/SKILL.md` documents the detection logic
+  and the user-visible warning shown before the replace.
+- README / README-ko upgrade sections call out the auto-migration.
+
+### Notes
+- Normal v2.x → v2.x upgrades are unaffected — the marker-based partial
+  replace (Generated vs. Custom Rules sections) still applies.
+- The validator from #18 catches any half-migrated state during Phase 4.
+
 ## [0.5.0] - 2026-04-13
 
 ### ⚠️ BREAKING — Hook contract migration to Claude Code v2.x
