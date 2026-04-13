@@ -442,7 +442,11 @@ harness-marketplace/
 │   ├── self-learning.md           # 자기 학습 엔진
 │   ├── config-schema.yaml         # 설정 스키마 (context, enforcement, ci_cd, self_learning)
 │   ├── classification.md          # 작업 분류 규칙 (디버그 복잡도 포함)
-│   ├── hooks/                     # Hook 스크립트 템플릿 (8개 스크립트 + 설정)
+│   ├── hooks/                     # Hook 스크립트 템플릿 (8 스크립트 + 설정 + v2.x helper 2개)
+│   │   ├── _parse.sh              # 공유: stdin JSON → TOOL_FILE_PATH/TOOL_CONTENT/TOOL_COMMAND
+│   │   ├── _log.sh                # 공유: log_block 헬퍼 (.claude/hook-blocks.log 기록)
+│   │   ├── *.sh.template          # 8개 hook 템플릿 (stdin 읽기, 차단 시 exit 2)
+│   │   └── hooks-config.json.template
 │   └── ci-cd/                     # CI/CD 워크플로우 템플릿
 │       └── github-actions/        # 5개 워크플로우 템플릿
 ├── data/                          # 딥리서치 옵션 데이터셋 (14개 파일)

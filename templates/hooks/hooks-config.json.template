@@ -7,7 +7,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash .claude/skills/project-harness/hooks/protected-files.sh \"$CLAUDE_TOOL_INPUT_FILE_PATH\"",
+            "command": "bash .claude/skills/project-harness/hooks/protected-files.sh",
             "timeout": 5
           }
         ]
@@ -19,7 +19,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash .claude/skills/project-harness/hooks/secret-guard.sh \"$CLAUDE_TOOL_INPUT_FILE_PATH\" \"$CLAUDE_TOOL_INPUT_CONTENT\"",
+            "command": "bash .claude/skills/project-harness/hooks/secret-guard.sh",
             "timeout": 10
           }
         ]
@@ -31,7 +31,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash .claude/skills/project-harness/hooks/pattern-guard.sh \"$CLAUDE_TOOL_INPUT_FILE_PATH\"",
+            "command": "bash .claude/skills/project-harness/hooks/pattern-guard.sh",
             "timeout": 10
           }
         ]
@@ -43,7 +43,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash .claude/skills/project-harness/hooks/db-safety.sh \"$CLAUDE_TOOL_INPUT_COMMAND\"",
+            "command": "bash .claude/skills/project-harness/hooks/db-safety.sh",
             "timeout": 5
           }
         ]
@@ -57,7 +57,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash .claude/skills/project-harness/hooks/post-edit-lint.sh \"$CLAUDE_TOOL_INPUT_FILE_PATH\"",
+            "command": "bash .claude/skills/project-harness/hooks/post-edit-lint.sh",
             "timeout": 30
           }
         ]
@@ -69,7 +69,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash .claude/skills/project-harness/hooks/post-edit-typecheck.sh \"$CLAUDE_TOOL_INPUT_FILE_PATH\"",
+            "command": "bash .claude/skills/project-harness/hooks/post-edit-typecheck.sh",
             "timeout": 30
           }
         ]
@@ -81,7 +81,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash .claude/skills/project-harness/hooks/post-edit-format.sh \"$CLAUDE_TOOL_INPUT_FILE_PATH\"",
+            "command": "bash .claude/skills/project-harness/hooks/post-edit-format.sh",
             "timeout": 15
           }
         ]

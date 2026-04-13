@@ -10,7 +10,8 @@
 
 const fs = require('fs');
 const path = require('path');
-const yaml = require ? require('yaml') : null;
+let yaml = null;
+try { yaml = require('yaml'); } catch { /* optional dep — fall back to JSON parsing */ }
 
 const HARNESS_ROOT = '.claude/skills/project-harness';
 
@@ -380,12 +381,14 @@ function validateHooks(projectPath) {
     return { valid: false, errors, warnings, checks, passed };
   }
 
-  // Check hooks-config.json exists and is valid JSON
+  // Check hooks-config.json exists and is valid JSON (v2.x: command should NOT contain $CLAUDE_TOOL_INPUT_*)
   checks++;
   const hooksConfigPath = path.join(harnessPath, 'hooks-config.json');
+  let hooksConfigRaw = '';
   if (fs.existsSync(hooksConfigPath)) {
     try {
-      const hooksConfig = JSON.parse(fs.readFileSync(hooksConfigPath, 'utf-8'));
+      hooksConfigRaw = fs.readFileSync(hooksConfigPath, 'utf-8');
+      const hooksConfig = JSON.parse(hooksConfigRaw);
       if (hooksConfig.hooks) {
         passed++;
       } else {
@@ -396,6 +399,25 @@ function validateHooks(projectPath) {
     }
   } else {
     errors.push('hooks-config.json not found');
+  }
+
+  // v2.x compliance: hooks-config.json command lines should NOT pass $CLAUDE_TOOL_INPUT_* args
+  // (v2.x passes the full payload as JSON via stdin; legacy env-var args are silent no-ops)
+  checks++;
+  if (hooksConfigRaw && /\$CLAUDE_TOOL_INPUT_/.test(hooksConfigRaw)) {
+    errors.push('hooks-config.json contains legacy $CLAUDE_TOOL_INPUT_* arg passing — Claude Code v2.x reads from stdin (see issue #16)');
+  } else {
+    passed++;
+  }
+
+  // v2.x compliance: required helper files (_parse.sh, _log.sh) must exist
+  for (const helper of ['_parse.sh', '_log.sh']) {
+    checks++;
+    if (fs.existsSync(path.join(hooksPath, helper))) {
+      passed++;
+    } else {
+      errors.push(`Required v2.x helper missing: hooks/${helper}`);
+    }
   }
 
   // Check each hook script referenced exists and has valid shebang
@@ -418,6 +440,21 @@ function validateHooks(projectPath) {
       passed++;
     } else {
       errors.push(`hooks/${script}: Unresolved template variables: ${unresolvedVars.join(', ')}`);
+    }
+
+    // v2.x compliance: PreToolUse blocking hooks should use `exit 2` (not `exit 1`)
+    // helpers (_*.sh) and post-edit / session-init are exempt.
+    const isHelper = script.startsWith('_');
+    const isBlockingHook = ['protected-files.sh', 'secret-guard.sh', 'pattern-guard.sh', 'db-safety.sh'].includes(script);
+    if (isBlockingHook && !isHelper) {
+      checks++;
+      // legacy `exit 1` (block) should be absent in generated rules section
+      const generatedSection = content.split('═══ CUSTOM RULES BELOW')[0] || content;
+      if (/^\s*exit\s+1\b/m.test(generatedSection)) {
+        errors.push(`hooks/${script}: legacy 'exit 1' found in generated rules — v2.x blocking exit code is 'exit 2' (see issue #16)`);
+      } else {
+        passed++;
+      }
     }
   }
 
