@@ -4,5 +4,11 @@ node_modules/
 Thumbs.db
 /.claude/
 
-# Keep benchmark batch logs (referenced by phase0-report.md)
+# Keep benchmark batch logs (referenced by phase05-report.md)
 !benchmarks/results/*.log
+
+# Raw per-run artifacts are large (embedded git repos) — exclude from VCS.
+# Aggregated data (phase05-report.md, aggregated.json, probe.json, scored/*.json)
+# is committed for reproducibility.
+benchmarks/results/raw/
+benchmarks/results/probe-events.jsonl

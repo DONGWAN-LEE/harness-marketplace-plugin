@@ -1,0 +1,100 @@
+{
+  "run_id": "orch-fastapi-router-trap__treatment__n2__2026-04-13T12-27-20-496Z",
+  "task_id": "orch-fastapi-router-trap",
+  "category": "orchestration",
+  "stack": "fastapi-postgres",
+  "condition": "treatment",
+  "n": "2",
+  "scored_at": "2026-04-13T13:00:27.199Z",
+  "automated": {
+    "check_results": [
+      {
+        "id": "readiness-route-file",
+        "type": "file_exists",
+        "pass": true,
+        "detail": "app/routes/readiness.py"
+      },
+      {
+        "id": "ready-endpoint",
+        "type": "file_contains",
+        "pass": true,
+        "detail": "app/routes/readiness.py: match"
+      },
+      {
+        "id": "trap-router-registered",
+        "type": "file_contains",
+        "pass": true,
+        "detail": "app/main.py: match"
+      }
+    ],
+    "checks_passed": 3,
+    "checks_total": 3,
+    "check_score": 1,
+    "files_touched": [
+      "app/main.py"
+    ],
+    "scope_drift_files": [],
+    "trap_caught": true,
+    "regression_ok": null
+  },
+  "hooks": {
+    "events_total": 0,
+    "by_hook": {},
+    "sampled_events": []
+  },
+  "risky_signature": {
+    "hook_target": null,
+    "risky_present": false,
+    "detail": "no-signature-defined"
+  },
+  "run_metadata": {
+    "totals": {
+      "elapsed_ms": 745577,
+      "tokens_total": 15239,
+      "cost_usd": 1.33491015,
+      "tool_calls": 96
+    },
+    "phases": [
+      {
+        "name": "plan",
+        "elapsed_ms": 62832,
+        "tokens_in": 10,
+        "tokens_out": 2778,
+        "cost_usd": 0.24813405000000002,
+        "tool_calls": 9,
+        "hook_events": 0,
+        "exit_code": 0,
+        "killed_by_timeout": false
+      },
+      {
+        "name": "implement",
+        "elapsed_ms": 428051,
+        "tokens_in": 16,
+        "tokens_out": 2961,
+        "cost_usd": 0.3758666999999999,
+        "tool_calls": 14,
+        "hook_events": 0,
+        "exit_code": 0,
+        "killed_by_timeout": false
+      },
+      {
+        "name": "verify",
+        "elapsed_ms": 254694,
+        "tokens_in": 1189,
+        "tokens_out": 8285,
+        "cost_usd": 0.7109094000000001,
+        "tool_calls": 73,
+        "hook_events": 0,
+        "exit_code": 0,
+        "killed_by_timeout": false
+      }
+    ],
+    "pipeline": {
+      "handoffs_present": [],
+      "result_files_present": [],
+      "regression_loop_invoked": false,
+      "regression_loop_recovered": false
+    },
+    "exit_code": null
+  }
+}

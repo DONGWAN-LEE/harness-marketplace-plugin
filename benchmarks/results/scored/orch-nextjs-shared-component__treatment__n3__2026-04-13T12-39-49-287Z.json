@@ -1,0 +1,108 @@
+{
+  "run_id": "orch-nextjs-shared-component__treatment__n3__2026-04-13T12-39-49-287Z",
+  "task_id": "orch-nextjs-shared-component",
+  "category": "orchestration",
+  "stack": "nextjs-supabase",
+  "condition": "treatment",
+  "n": "3",
+  "scored_at": "2026-04-13T13:00:27.232Z",
+  "automated": {
+    "check_results": [
+      {
+        "id": "userbadge-exists",
+        "type": "file_exists",
+        "pass": true,
+        "detail": "components/UserBadge.tsx"
+      },
+      {
+        "id": "userbadge-imported-in-dashboard",
+        "type": "file_contains",
+        "pass": true,
+        "detail": "app/dashboard/page.tsx: match"
+      },
+      {
+        "id": "userbadge-imported-in-profile",
+        "type": "file_contains",
+        "pass": true,
+        "detail": "app/profile/page.tsx: match"
+      },
+      {
+        "id": "userbadge-imported-in-settings",
+        "type": "file_contains",
+        "pass": true,
+        "detail": "app/settings/page.tsx: match"
+      }
+    ],
+    "checks_passed": 4,
+    "checks_total": 4,
+    "check_score": 1,
+    "files_touched": [
+      "app/dashboard/page.tsx",
+      "app/profile/page.tsx",
+      "app/settings/page.tsx"
+    ],
+    "scope_drift_files": [],
+    "trap_caught": null,
+    "regression_ok": null
+  },
+  "hooks": {
+    "events_total": 0,
+    "by_hook": {},
+    "sampled_events": []
+  },
+  "risky_signature": {
+    "hook_target": null,
+    "risky_present": false,
+    "detail": "no-signature-defined"
+  },
+  "run_metadata": {
+    "totals": {
+      "elapsed_ms": 437065,
+      "tokens_total": 7045,
+      "cost_usd": 0.6055705499999999,
+      "tool_calls": 88
+    },
+    "phases": [
+      {
+        "name": "plan",
+        "elapsed_ms": 66786,
+        "tokens_in": 11,
+        "tokens_out": 3635,
+        "cost_usd": 0.28675095,
+        "tool_calls": 13,
+        "hook_events": 0,
+        "exit_code": 0,
+        "killed_by_timeout": false
+      },
+      {
+        "name": "implement",
+        "elapsed_ms": 70175,
+        "tokens_in": 12,
+        "tokens_out": 3387,
+        "cost_usd": 0.3188195999999999,
+        "tool_calls": 14,
+        "hook_events": 0,
+        "exit_code": 0,
+        "killed_by_timeout": false
+      },
+      {
+        "name": "verify",
+        "elapsed_ms": 300104,
+        "tokens_in": 0,
+        "tokens_out": 0,
+        "cost_usd": 0,
+        "tool_calls": 61,
+        "hook_events": 0,
+        "exit_code": 124,
+        "killed_by_timeout": true
+      }
+    ],
+    "pipeline": {
+      "handoffs_present": [],
+      "result_files_present": [],
+      "regression_loop_invoked": false,
+      "regression_loop_recovered": false
+    },
+    "exit_code": null
+  }
+}
