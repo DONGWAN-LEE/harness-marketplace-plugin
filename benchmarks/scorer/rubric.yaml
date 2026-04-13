@@ -1,0 +1,76 @@
+# LLM Judge Rubric
+# Used by llm-judge.js to score run outputs on 4 dimensions, 1-10 each.
+# Intentionally concise — the judge gets this embedded in the system prompt.
+
+dimensions:
+  code_quality:
+    label: "Code Quality"
+    description: >
+      Readability, organization, idiomatic usage of the framework/language.
+      Consider naming, structure, separation of concerns, and whether the code
+      follows modern conventions for the target stack.
+    levels:
+      "10": "Exemplary — clean, idiomatic, well-structured, easy to maintain"
+      "8": "Good — minor style issues but well-organized and readable"
+      "6": "Acceptable — works but has readability or organization issues"
+      "4": "Weak — messy, inconsistent, or uses anti-patterns"
+      "2": "Poor — hard to read, violates basic conventions"
+      "1": "Unusable — broken or severely malformed"
+
+  completeness:
+    label: "Requirements Completeness"
+    description: >
+      How thoroughly the output addresses the task requirements. Each requirement
+      from the task spec should be checked: file created, fields added, correct
+      signatures, etc. Missing scope boundaries (doing MORE than asked) counts
+      against this dimension.
+    levels:
+      "10": "All requirements met, nothing extra, all scope boundaries respected"
+      "8": "All core requirements met, minor omissions or small extra work"
+      "6": "Most requirements met, 1-2 missing items or scope creep"
+      "4": "Half the requirements met; significant gaps"
+      "2": "Minimal effort — output barely addresses the task"
+      "1": "Task not addressed at all"
+
+  edge_cases:
+    label: "Edge Case Handling"
+    description: >
+      Does the code handle error paths, empty states, invalid inputs, and
+      boundary conditions? For APIs: 4xx responses, error serialization.
+      For UI: empty/loading/error states. For logic: null checks, race
+      conditions, type coercion.
+    levels:
+      "10": "Comprehensive — handles all foreseeable edge cases"
+      "8": "Most edge cases covered, minor gaps"
+      "6": "Basic error handling present but incomplete"
+      "4": "Happy path only, minimal error handling"
+      "2": "No edge case handling, will crash on unexpected input"
+      "1": "Edge cases ignored entirely"
+
+  security:
+    label: "Security"
+    description: >
+      Does the code avoid obvious vulnerabilities? Look for SQL injection,
+      XSS, hardcoded secrets, missing auth checks, insecure JWT handling,
+      path traversal, unvalidated user input, insecure defaults, and
+      leakage of sensitive data in logs or responses.
+    levels:
+      "10": "Solid — parameterized queries, validated inputs, no hardcoded secrets, correct auth"
+      "8": "Generally secure with minor improvements possible"
+      "6": "No obvious vulnerabilities but missing some best practices"
+      "4": "One clear vulnerability or multiple minor issues"
+      "2": "Multiple vulnerabilities (e.g., hardcoded secrets AND missing auth)"
+      "1": "Severely insecure — would fail basic security review"
+
+output_schema:
+  type: "json"
+  keys:
+    - code_quality: "integer 1-10"
+    - code_quality_reason: "one-sentence justification"
+    - completeness: "integer 1-10"
+    - completeness_reason: "one-sentence justification"
+    - edge_cases: "integer 1-10"
+    - edge_cases_reason: "one-sentence justification"
+    - security: "integer 1-10"
+    - security_reason: "one-sentence justification"
+    - overall_notes: "max 3 sentences — anything notable the dimensions don't capture"
