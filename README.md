@@ -185,6 +185,8 @@ Automatically checks GitHub for the latest version and fetches templates directl
 
 Preserves your `project-config.yaml`, hook Custom Rules, and `learning-log.yaml` while updating template-based skill files to the latest version.
 
+**Legacy v1.x hook auto-migration** (since v0.5.1): if the upgrade detects that your project was generated against the old v1.x hook contract (silent no-ops under Claude Code v2.x — see #16), the entire `hooks/` directory is replaced with the v2.x format. Your old hooks are preserved in the timestamped backup directory; if you had Custom Rules, copy them manually from there.
+
 ---
 
 ### Configure CI/CD independently
