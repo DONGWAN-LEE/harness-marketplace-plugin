@@ -3,3 +3,6 @@ node_modules/
 .DS_Store
 Thumbs.db
 /.claude/
+
+# Keep benchmark batch logs (referenced by phase0-report.md)
+!benchmarks/results/*.log
