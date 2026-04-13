@@ -181,15 +181,38 @@ AI 추천:
 
 ### 기존 harness 업그레이드
 
+> 📖 **단계별 전체 가이드: [UPGRADE-ko.md](./UPGRADE-ko.md)**
+
+업그레이드는 **순서대로 두 단계** 입니다:
+
+**Step 1 — 플러그인 자체 업데이트** (릴리스당 1회):
+
+```
+/plugin          # Claude Code 안에서 → Marketplaces → harness-marketplace
+                 # → Update marketplace → Update plugin → Claude Code 재시작
+```
+
+이 단계를 건너뛰면 `/upgrade`가 "이미 최신 버전입니다"라고 답하는 주된 원인이 됩니다 — 캐시된 플러그인(예: v0.3.0)이 자기 자신과 비교하기 때문입니다.
+
+**Step 2 — 각 프로젝트의 harness 업그레이드** (프로젝트별 릴리스당 1회):
+
 ```bash
+cd <your-project>
 /harness-marketplace:upgrade
 ```
 
-GitHub에서 최신 버전을 자동으로 확인하고 템플릿을 직접 가져옵니다 — 플러그인을 먼저 수동 업데이트할 필요 없이 한 번에 완료됩니다. 오프라인 시 로컬 플러그인 캐시를 사용합니다 (`--offline`).
+업그레이드 스킬은 GitHub에서 최신 템플릿을 자동으로 가져오며 (v0.4.0+), `project-config.yaml`, hook의 Custom Rules, `learning-log.yaml`을 보존하고, `.claude/backups/project-harness-{timestamp}/`에 타임스탬프 백업을 남깁니다. `--offline`으로 로컬 플러그인 캐시 강제 사용, `--preview`로 실행 없이 계획만 확인, `--backup-only`로 업그레이드 없이 백업만.
 
-`project-config.yaml`, hook의 Custom Rules, `learning-log.yaml`을 보존하면서 템플릿 기반 파일만 최신 버전으로 업데이트합니다.
+**v1.x legacy hook 자동 마이그레이션** (v0.5.1+): 프로젝트가 구버전 v1.x hook 컨트랙트로 생성되어 Claude Code v2.x에서 silent no-op 상태([#16](https://github.com/aiAgentDevelop/harness-marketplace-plugin/issues/16))임을 감지하면, `hooks/` 디렉토리 전체를 v2.x 포맷으로 교체합니다. 기존 hook은 백업 디렉토리에 보존되며, Custom Rules가 있었다면 수동 복사 필요. 업그레이드가 `.claude/settings.json`의 hook 엔트리 교체도 제안할 텐데 — **반드시 수락하세요**, 그러지 않으면 Claude Code가 새 hook을 등록하지 않습니다.
 
-**v1.x legacy hook 자동 마이그레이션** (v0.5.1+): 프로젝트가 구버전 v1.x hook 컨트랙트로 생성되어 Claude Code v2.x 에서 silent no-op 상태(#16)임을 감지하면, `hooks/` 디렉토리 전체를 v2.x 포맷으로 교체합니다. 기존 hook은 타임스탬프 백업 디렉토리에 보존되며, Custom Rules가 있었다면 수동 복사 필요.
+**업그레이드 후 검증**:
+
+```bash
+claude --debug-file /tmp/d.log        # 시작 후 즉시 Ctrl+C
+grep "Registered.*hooks" /tmp/d.log   # 기대: N > 0
+```
+
+전체 플로우, 문제 해결 ("Registered 0 hooks", 백업 이 스킬로 등록되는 문제 등), 엔드-투-엔드 검증, 롤백은 [UPGRADE-ko.md](./UPGRADE-ko.md) 참고.
 
 ---
 
@@ -472,7 +495,9 @@ harness-marketplace/
 ├── NOTICE                         # 귀속 표시
 ├── package.json
 ├── README.md
-└── README-ko.md
+├── README-ko.md
+├── UPGRADE.md                     # 단계별 업그레이드 가이드 (영문)
+└── UPGRADE-ko.md                  # 단계별 업그레이드 가이드 (한글)
 ```
 
 ## 요구사항
