@@ -1,0 +1,6 @@
+{
+  "name": "harness-marketplace-benchmarks",
+  "private": true,
+  "type": "module",
+  "description": "Phase 0 A/B pilot runner and scorer for harness-marketplace"
+}
