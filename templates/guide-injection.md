@@ -20,17 +20,17 @@ project-plan, project-implement, project-visual-qa, project-verify 가 공통 �
 | dependency-explorer | 1 — 분석 | dependency-analysis |
 | pattern-explorer | 1 — 분석 | pattern-conventions |
 | architect | 2 — 설계 | architecture-overview, architecture-rules |
-| ui-designer (has_ui) | 2 — 설계 | design-system, ux-checklist |
-| scaffolder | 4 — 구현 | project-layout, module-scaffold |
+| ui-designer (has_ui) | 2 — 설계 | design-system, ux-checklist, **ui-defect-patterns** |
+| scaffolder | 4 — 구현 | project-layout, module-scaffold, **fsd-scaffold-patterns** (architecture=fsd) |
 | implementer | 4 — 구현 | architecture-rules, coding-standards |
-| ui-checker (has_ui) | 4 — 구현 | ux-checklist, design-system |
+| ui-checker (has_ui) | 4 — 구현 | ux-checklist, design-system, **ui-defect-patterns** |
 | integrator | 4 — 구현 | architecture-rules |
 | security-checker (has_security_surface) | 4 — 구현 | auth-security, api-design |
 | test-writer | 4 — 구현 | testing-strategy |
 | arch-auditor | 7 — 검증 | architecture-overview, architecture-rules |
 | code-reviewer | 7 — 검증 | coding-standards, architecture-rules |
 | deploy-validator | 7 — 검증 | deployment-checklist |
-| ux-reviewer (has_ui) | 7 — 검증 | ux-checklist |
+| ux-reviewer (has_ui) | 7 — 검증 | ux-checklist, **ui-defect-patterns** |
 | design-reviewer (has_ui) | 7 — 검증 | design-system |
 | db-auditor (has_database) | 7 — 검증 | database-design |
 | auth-auditor (has_auth) | 7 — 검증 | auth-security |
@@ -185,7 +185,7 @@ gs-gacha-compliance-auditor    # Phase 7
 
 | 워커 | 가이드 | 기술 에이전트 | 도메인 에이전트 |
 |------|-------|-------------|--------------|
-| scaffolder | project-layout, module-scaffold | t-architecture-architect | - |
+| scaffolder | project-layout, module-scaffold, **fsd-scaffold-patterns** (if fsd) | t-architecture-architect | - |
 | implementer | architecture-rules, coding-standards | t-frontend-architect, t-state-data-engineer, t-backend-engineer | - |
 | ui-checker (has_ui) | ux-checklist, design-system | t-ui-ux-engineer | - |
 | integrator | architecture-rules | - | - |

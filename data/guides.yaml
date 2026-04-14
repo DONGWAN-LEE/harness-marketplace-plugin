@@ -60,6 +60,30 @@ guides:
       recommended_when:
         - has_auth
 
+    - id: supabase-security
+      name: Supabase Security Guide
+      domain: development
+      description: Supabase-specific security patterns complementing the supabase-security-gate agent. Covers RLS policy design (SELECT/INSERT/UPDATE/DELETE per-operation rules, auth.uid ownership checks, avoiding RLS bypass via JOIN/subquery), client key isolation (anon-only from client, service_role on server only, env-var injection), auth flow (getUser vs getSession, server-side guard before query, error handling), Storage bucket ACL (RLS on buckets, MIME/size limits, public/private separation), and API/query safety (parameterized queries, SECURITY DEFINER validation, Edge Function origin checks). Referenced by db-auditor + auth-auditor + supabase-security-gate workers.
+      suitable_project_types:
+        - web
+        - backend
+        - mobile
+      key_topics:
+        - rls_policy_design
+        - auth_uid_ownership
+        - rls_bypass_avoidance
+        - anon_vs_service_role_isolation
+        - env_var_key_injection
+        - get_user_over_get_session
+        - server_side_auth_guard
+        - storage_bucket_acl
+        - storage_mime_size_limits
+        - parameterized_queries
+        - security_definer_input_validation
+        - edge_function_origin_check
+      recommended_when:
+        - has_database
+
     - id: testing-strategy
       name: Testing Strategy Guide
       domain: development

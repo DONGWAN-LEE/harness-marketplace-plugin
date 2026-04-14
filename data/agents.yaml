@@ -73,6 +73,35 @@ agents:
       recommended_when: []
       model: sonnet
 
+    - id: supabase-security-gate
+      name: Supabase Security Gate
+      domain: security
+      description: Deep Supabase-specific security validator running a 17-point checklist across 5 sections — Table Security (RLS enablement + per-op policies + auth.uid enforcement + admin isolation + JOIN bypass), Client Security (anon-only key, env-var injection, RPC/Edge wrappers over direct .from()), Auth Security (getUser over getSession, server-side auth guard, redirect/401 handling), Storage Security (bucket RLS, MIME/size limits, public/private separation), API Security (parameterized queries, SECURITY DEFINER input validation, Edge origin checks). Binary PASS/BLOCK verdict. Runs after implement phase on Supabase-touching files + after any migration SQL change.
+      suitable_project_types:
+        - web
+        - mobile
+        - backend
+      key_concerns:
+        - rls_enforcement_all_tables
+        - rls_policies_per_op
+        - auth_uid_ownership_check
+        - admin_table_service_role_only
+        - rls_bypass_via_join_or_subquery
+        - anon_only_client_key
+        - env_var_key_injection
+        - rpc_edge_wrapper_over_direct_from
+        - get_user_over_get_session
+        - server_auth_before_query
+        - storage_bucket_rls
+        - storage_mime_size_limits
+        - storage_public_private_separation
+        - parameterized_queries
+        - security_definer_input_validation
+        - edge_origin_auth_check
+      recommended_when:
+        - has_database
+      model: opus
+
   performance:
 
     - id: performance-auditor
