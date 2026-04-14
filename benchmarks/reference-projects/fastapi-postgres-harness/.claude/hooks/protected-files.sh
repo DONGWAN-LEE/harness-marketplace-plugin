@@ -24,6 +24,7 @@ BUILTIN_PATTERNS=(
   'poetry.lock'
   'Pipfile.lock'
   'uv.lock'
+  'requirements.lock'
 )
 
 check_basename_or_contains() {
