@@ -130,9 +130,9 @@ async function scoreSingleRun(run, taskById, { skipJudge }) {
   const compat = await scoreCompatibility(task, workDir);
   axes.compatibility = compat.score;
 
-  // Axis 2 — Reliability: single tasks set to neutral 50 (not meaningful here).
+  // Axis 2 — Reliability: single tasks return null (averaging skips). Sprint runs fill this.
   const rel = await scoreReliability(task, workDir);
-  axes.reliability = rel.score ?? 50;
+  axes.reliability = rel.score; // may be null for single-task
 
   // Axes 6/7 — raw perf values; normalization post-aggregation.
   const perf = extractPerfRaw(summary);
@@ -141,9 +141,9 @@ async function scoreSingleRun(run, taskById, { skipJudge }) {
   const lt = leadTime(summary);
   axes.dora_lead_time = lt.score;
 
-  // Axes 10/11 — sprint-only → neutral 50 for single task.
-  axes.dora_cfr = 50;
-  axes.dora_mttr = 50;
+  // Axes 10/11 — sprint-only → null for single task so averaging skips.
+  axes.dora_cfr = null;
+  axes.dora_mttr = null;
 
   // Axes 12/13 — LLM judge (optional, cached per run)
   let judge = { usability_score: 50, overengineering_score: 50 };
@@ -347,11 +347,17 @@ function normalizePerfAxes(allRuns) {
 }
 
 function weightedTotal(axes) {
+  // Re-normalize weights if some axes have no data (null) — avoid penalizing/inflating
+  // conditions for axes that are structurally n/a.
+  let sumW = 0;
   let sum = 0;
   for (const [k, w] of Object.entries(WEIGHTS)) {
-    sum += (axes[k] ?? 50) * (w / 100);
+    if (axes[k] == null) continue;
+    sum += axes[k] * w;
+    sumW += w;
   }
-  return Math.round(sum * 10) / 10;
+  if (sumW === 0) return 0;
+  return Math.round((sum / sumW) * 10) / 10;
 }
 
 function groupByCondition(runs) {
@@ -365,8 +371,13 @@ function groupByCondition(runs) {
 function averageAxes(runs) {
   const axes = {};
   for (const k of Object.keys(WEIGHTS)) {
-    const vals = runs.map((r) => r.axes[k]).filter((x) => typeof x === "number");
-    axes[k] = vals.length ? Math.round(vals.reduce((a, b) => a + b, 0) / vals.length) : 50;
+    const vals = runs
+      .map((r) => r.axes[k])
+      .filter((x) => typeof x === "number" && !isNaN(x));
+    // If no applicable data for this axis, leave as null (not an artificial 50)
+    axes[k] = vals.length
+      ? Math.round(vals.reduce((a, b) => a + b, 0) / vals.length)
+      : null;
   }
   return axes;
 }
@@ -628,15 +639,17 @@ async function main() {
     if (!run) continue;
     const s = await scoreSingleRun(run, tasks, { skipJudge });
     if (s.error) continue;
+    // Sprint runs already set runMeta in scoreSprintRun; OWASP runs get it here
+    const runMeta = s.runMeta || {
+      hookEventsTotal: run.summary?.hookEventsTotal ?? 0,
+      hookBlockCount: run.summary?.hookBlockCount ?? 0,
+      costUsd: run.summary?.costUsd ?? 0,
+    };
     scored.push({
       ...s,
       condition: run.condition.condition,
-      taskId: run.condition.taskId,
-      runMeta: {
-        hookEventsTotal: run.summary.hookEventsTotal,
-        hookBlockCount: run.summary.hookBlockCount,
-        costUsd: run.summary.costUsd,
-      },
+      taskId: run.condition.taskId ?? run.condition.sprint,
+      runMeta,
     });
   }
   const { maxTime, maxCost } = normalizePerfAxes(scored);
