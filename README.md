@@ -487,6 +487,7 @@ harness-marketplace/
 │   ├── schemas.md                 # Reference: JSON schemas for PlanResult/ImplementationResult/VerificationResult
 │   ├── guide-injection.md         # Reference: worker → guide + agent checklist mapping
 │   ├── monitor-mode.md            # Reference: /project-harness monitor (CronCreate-based idle auto-watch)
+│   ├── parallel-execution.md      # Reference: Fan-out/Fan-in PARALLEL REQUIRED directive (single-message multi-Task pattern)
 │   ├── codebase-analysis.md       # Sub-skill: Phase 2.5 pre-impl analysis (arch/design/deps/impact)
 │   ├── tdd-implementation.md      # Reference: Red-Green-Refactor strategy for project-implement (conditional)
 │   ├── ui-defect-patterns.md      # Reference: static UI code review (8 defect patterns, conditional: has_ui)

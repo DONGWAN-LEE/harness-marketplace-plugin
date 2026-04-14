@@ -326,6 +326,7 @@ enclosed block accordingly):
    - `references/schemas.md` ← templates/schemas.md
    - `references/guide-injection.md` ← templates/guide-injection.md
    - `references/monitor-mode.md` ← templates/monitor-mode.md
+   - `references/parallel-execution.md` ← templates/parallel-execution.md
    - `codebase-analysis/SKILL.md` ← templates/codebase-analysis.md
 
    **Conditional (activation flag 재평가 후 처리)**:

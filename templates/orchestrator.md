@@ -492,4 +492,4 @@ Each skill can also be invoked standalone:
 
 ## Related References
 
-모든 sub-skill 이 공유: `references/progress-format.md` (진행 배너·이모지·워커 트리), `references/ui-conventions.md` (3-옵션 게이트 + 완료 요약), `references/classification.md` (Phase 0 출력 🏷️), `references/handoff-templates.md` (state/handoffs/*.md), `references/schemas.md` (PlanResult / ImplementationResult / VerificationResult JSON), `references/guide-injection.md` (워커 → 가이드 매핑), `references/monitor-mode.md` (monitor 서브커맨드).
+모든 sub-skill 이 공유: `references/progress-format.md` (진행 배너·이모지·워커 트리), `references/ui-conventions.md` (3-옵션 게이트 + 완료 요약), `references/classification.md` (Phase 0 출력 🏷️), `references/handoff-templates.md` (state/handoffs/*.md), `references/schemas.md` (PlanResult/ImplementationResult/VerificationResult JSON), `references/guide-injection.md` (워커 → 가이드 매핑), `references/monitor-mode.md` (monitor 서브커맨드), `references/parallel-execution.md` (Fan-out/Fan-in PARALLEL REQUIRED directive).
