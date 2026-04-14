@@ -65,19 +65,48 @@ async function discoverRuns(stage) {
   const dir = path.join(BENCHMARKS_ROOT, "results", "raw");
   if (!existsSync(dir)) return [];
   const all = await readdir(dir);
+  // Slim aggregation includes Pilot OWASP runs (Pilot is the security baseline
+  // that Slim's sprints build on top of).
+  if (stage === "slim" || stage === "full") {
+    return all.filter(
+      (name) => name.startsWith("pilot-") || name.startsWith(`${stage}-`),
+    );
+  }
   return all.filter((name) => name.startsWith(`${stage}-`));
 }
 
 async function loadRun(runDir) {
   const summaryPath = path.join(runDir, "summary.json");
+  const sprintSummaryPath = path.join(runDir, "sprint-summary.json");
   const condPath = path.join(runDir, "condition.json");
-  if (!existsSync(summaryPath) || !existsSync(condPath)) return null;
-  const summary = JSON.parse(await readFile(summaryPath, "utf8"));
+  if (!existsSync(condPath)) return null;
   const condition = JSON.parse(await readFile(condPath, "utf8"));
-  return { summary, condition, workDir: path.join(runDir, "workdir") };
+
+  if (existsSync(sprintSummaryPath)) {
+    // Sprint run: gather per-step data
+    const sprintSummary = JSON.parse(await readFile(sprintSummaryPath, "utf8"));
+    return {
+      kind: "sprint",
+      sprintSummary,
+      condition,
+      runDir,
+      workDir: path.join(runDir, "workdir"),
+    };
+  }
+  if (!existsSync(summaryPath)) return null;
+  const summary = JSON.parse(await readFile(summaryPath, "utf8"));
+  return {
+    kind: "owasp",
+    summary,
+    condition,
+    workDir: path.join(runDir, "workdir"),
+  };
 }
 
 async function scoreSingleRun(run, taskById, { skipJudge }) {
+  if (run.kind === "sprint") {
+    return scoreSprintRun(run, taskById, { skipJudge });
+  }
   const { summary, condition, workDir } = run;
   const task = taskById[condition.taskId];
   if (!task) {
@@ -152,6 +181,145 @@ async function scoreSingleRun(run, taskById, { skipJudge }) {
     maintain,
     funcSuit,
     rel,
+  };
+}
+
+/**
+ * Score a sprint run by aggregating per-step data into the same 13 axes.
+ * Sprints uniquely contribute Reliability, DORA CFR, DORA MTTR (otherwise neutral 50).
+ */
+async function scoreSprintRun(run, taskById, { skipJudge }) {
+  const { sprintSummary, condition, runDir } = run;
+  const steps = sprintSummary.steps || [];
+  if (!steps.length) return { error: "sprint has no steps" };
+
+  // Functional Suitability: mean of per-step checkPass/checkTotal
+  const funcs = steps.map((s) =>
+    s.checkTotal > 0 ? Math.round((100 * s.checkPass) / s.checkTotal) : 50,
+  );
+  const funcSuitScore = Math.round(funcs.reduce((a, b) => a + b, 0) / funcs.length);
+
+  // Reliability: 100 - (regressionsObserved / totalSteps × 100)
+  const regressions = steps.filter((s) => s.regressionObserved).length;
+  const reliabilityScore = Math.max(
+    0,
+    Math.round(100 * (1 - regressions / steps.length)),
+  );
+
+  // DORA Lead Time: based on mean step wall-time
+  const meanStepWall =
+    steps.reduce((a, s) => a + s.durationMs, 0) / steps.length;
+  const ltCap = 600_000; // 10 min per step is bad
+  const leadTimeScore = Math.max(
+    0,
+    Math.round(100 * (1 - Math.min(meanStepWall, ltCap) / ltCap)),
+  );
+
+  // DORA CFR: same as reliability (regression rate inverted)
+  const cfrScore = reliabilityScore;
+
+  // DORA MTTR: mean recoveryMs across steps that recovered
+  const recoveries = steps
+    .filter((s) => s.recoveryMs != null)
+    .map((s) => s.recoveryMs);
+  let mttrScore;
+  if (regressions === 0) {
+    mttrScore = 100; // no regressions to recover from
+  } else if (recoveries.length === 0) {
+    mttrScore = 0; // had regressions, never recovered
+  } else {
+    const meanRec = recoveries.reduce((a, b) => a + b, 0) / recoveries.length;
+    const cap = 600_000;
+    mttrScore = Math.max(
+      0,
+      Math.round(100 * (1 - Math.min(meanRec, cap) / cap)),
+    );
+  }
+
+  // Final-state ASVS + CWE on the LAST step's workdir
+  const lastStepDir = path.join(
+    runDir,
+    `step-${String(steps[steps.length - 1].step).padStart(2, "0")}`,
+  );
+  const finalWork = path.join(runDir, "workdir");
+  // Run ASVS aggregated over all step tasks against final workdir
+  let asvsHits = 0;
+  let asvsTotal = 0;
+  for (const s of steps) {
+    const task = taskById[s.taskId];
+    if (!task) continue;
+    const r = await scoreAsvs(task, finalWork);
+    asvsHits += r.hits.length;
+    asvsTotal += task.asvs?.length ?? 1;
+  }
+  const asvsScore = asvsTotal ? Math.round((100 * asvsHits) / asvsTotal) : 50;
+  const cweRes = await scoreCwe(finalWork);
+  const cweScore = cweRes.score;
+
+  // Maintainability + compatibility on final workdir
+  const maintain = await scoreMaintainabilityStatic(finalWork);
+  const totalChanged = steps.reduce((a, s) => a + (s.filesChanged?.length ?? 0), 0);
+  const allowed = steps.reduce((a, s) => a + (taskById[s.taskId]?.allowed_file_budget ?? 10), 0);
+  const overage = Math.max(0, totalChanged - allowed);
+  const compatScore = Math.max(0, Math.round(100 * (1 - overage / Math.max(allowed, 1))));
+
+  // Perf raw — sprint totals
+  const perf = {
+    wallTimeMs: sprintSummary.totalDurationMs,
+    costUsd: sprintSummary.totalCostUsd,
+    tokens: 0,
+  };
+
+  // Judge: aggregate per-step judge scores if present
+  let usability = 50;
+  let overengineering = 50;
+  if (!skipJudge) {
+    const stepJudges = [];
+    for (const s of steps) {
+      const stepDir = path.join(runDir, `step-${String(s.step).padStart(2, "0")}`);
+      const judgeCache = path.join(stepDir, "judge.json");
+      if (existsSync(judgeCache)) {
+        try {
+          stepJudges.push(JSON.parse(await readFile(judgeCache, "utf8")));
+        } catch {}
+      }
+    }
+    if (stepJudges.length) {
+      const u = stepJudges.map((j) => j.usability_score).filter((x) => typeof x === "number");
+      const o = stepJudges.map((j) => j.overengineering_score).filter((x) => typeof x === "number");
+      if (u.length) usability = Math.round(u.reduce((a, b) => a + b, 0) / u.length);
+      if (o.length) overengineering = Math.round(o.reduce((a, b) => a + b, 0) / o.length);
+    }
+  }
+
+  return {
+    axes: {
+      functional_suitability: funcSuitScore,
+      reliability: reliabilityScore,
+      security_asvs: asvsScore,
+      security_cwe: cweScore,
+      maintainability: maintain.score,
+      compatibility: compatScore,
+      dora_lead_time: leadTimeScore,
+      dora_cfr: cfrScore,
+      dora_mttr: mttrScore,
+      usability,
+      over_engineering: 100 - overengineering,
+      // perf axes computed in normalize step using raw values below
+    },
+    perf,
+    asvs: { score: asvsScore, hits: [], risky: asvsScore < 100 },
+    cwe: cweRes,
+    runMeta: {
+      hookEventsTotal: sprintSummary.totalHookBlocks ?? 0,
+      hookBlockCount: sprintSummary.totalHookBlocks ?? 0,
+      costUsd: sprintSummary.totalCostUsd,
+    },
+    sprintMeta: {
+      sprint: sprintSummary.sprint,
+      stepCount: steps.length,
+      regressions,
+    },
   };
 }
 
@@ -421,13 +589,19 @@ async function tryReadFile(p) {
 }
 
 async function loadTasks() {
-  const dir = path.join(BENCHMARKS_ROOT, "tasks", "owasp");
   const out = {};
-  if (!existsSync(dir)) return out;
-  const files = (await readdir(dir)).filter((f) => f.endsWith(".md"));
-  for (const f of files) {
-    const t = await parseTask(path.join(dir, f));
-    out[t.id] = t;
+  for (const sub of [
+    "owasp",
+    "sprint-nextjs-supabase",
+    "sprint-fastapi-postgres",
+    "sprint-game",
+  ]) {
+    const dir = path.join(BENCHMARKS_ROOT, "tasks", sub);
+    if (!existsSync(dir)) continue;
+    for (const f of (await readdir(dir)).filter((f) => f.endsWith(".md"))) {
+      const t = await parseTask(path.join(dir, f));
+      out[t.id] = t;
+    }
   }
   return out;
 }

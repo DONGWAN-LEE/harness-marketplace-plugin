@@ -5,6 +5,7 @@ import { parseTask } from "./task-parser.js";
 import { runBare } from "./run-bare.js";
 import { runClaudeMdOnly } from "./run-claude-md-only.js";
 import { runHarness } from "./run-harness.js";
+import { runSprint } from "./run-sprint.js";
 import { mkdir, readdir, writeFile, readFile } from "node:fs/promises";
 import { existsSync } from "node:fs";
 import path from "node:path";
@@ -18,14 +19,20 @@ const RESULTS_ROOT = path.join(BENCHMARKS_ROOT, "results");
 
 const BUDGET_USD = {
   pilot: 40,
-  slim: 120,
+  slim: 80, // sprint-only addition, ~$30 expected
   full: 350,
 };
 
 const STAGE_N = {
   pilot: 2, // reduced per PROTOCOL-v2 amendment 2026-04-13 (budget safety)
-  slim: 3,
+  slim: 2, // reduced per amendment for sprint expansion (sequential cost)
   full: 3,
+};
+
+// Sprint definitions for slim/full stages
+const SPRINTS = {
+  slim: ["sprint-nextjs-supabase", "sprint-fastapi-postgres"],
+  full: ["sprint-nextjs-supabase", "sprint-fastapi-postgres", "sprint-game"],
 };
 
 function parseArgs(argv) {
@@ -90,8 +97,9 @@ async function loadOwaspTasks() {
 async function loadStageTasks(stage) {
   const owasp = await loadOwaspTasks();
   if (stage === "pilot") return { A2: owasp, A1: [], A3: [] };
-  // Slim/Full wiring kept minimal for now — extended in S8/S9
-  return { A2: owasp, A1: [], A3: [] };
+  // Slim/Full: pilot (A2) was already collected; this batch only runs the NEW
+  // sprint cells (A3). Aggregator reads pilot-* + slim-* together.
+  return { A2: [], A1: [], A3: SPRINTS[stage] || [] };
 }
 
 function resolveSeedPath(task, condition) {
@@ -111,9 +119,44 @@ function resolveSeedPath(task, condition) {
   throw new Error(`unknown condition: ${condition}`);
 }
 
-async function runCell(task, condition, trialIdx, stage) {
-  const runId = `${stage}-${task.id}-${condition}-t${trialIdx}`;
+function resolveSprintSeed(sprintName, condition) {
+  if (condition === "bare_claude") return null;
+  const stack = sprintName.includes("fastapi") ? "fastapi" : "nextjs";
+  const base = path.join(BENCHMARKS_ROOT, "reference-projects");
+  if (condition === "claude_md_only")
+    return path.join(base, `claude-md-only-${stack}`);
+  if (condition === "full_harness") return path.join(base, `harness-${stack}`);
+  throw new Error("unknown condition: " + condition);
+}
+
+async function runCell(cell, stage) {
+  const { kind, task, condition, trialIdx, sprintName } = cell;
+  const runId =
+    kind === "sprint"
+      ? `${stage}-sprint-${sprintName}-${condition}-t${trialIdx}`
+      : `${stage}-${task.id}-${condition}-t${trialIdx}`;
   const outDir = path.join(RESULTS_ROOT, "raw", runId);
+  if (kind === "sprint") {
+    if (existsSync(path.join(outDir, "sprint-summary.json"))) {
+      return { runId, skipped: true };
+    }
+    try {
+      const res = await runSprint({
+        sprintDir: path.join(BENCHMARKS_ROOT, "tasks", sprintName),
+        condition,
+        outDir,
+        seedRepoPath: resolveSprintSeed(sprintName, condition),
+      });
+      // Synthetic summary for budget tracking
+      return {
+        runId,
+        summary: { costUsd: res.totalCostUsd, durationMs: res.totalDurationMs },
+      };
+    } catch (err) {
+      return { runId, error: String(err?.stack || err) };
+    }
+  }
+  // OWASP single-task path
   if (existsSync(path.join(outDir, "summary.json"))) {
     return { runId, skipped: true };
   }
@@ -138,14 +181,28 @@ async function runCell(task, condition, trialIdx, stage) {
 
 async function main() {
   const { stage, seed, concurrency, dryRun, limit } = parseArgs(process.argv);
-  const { A2 } = await loadStageTasks(stage);
+  const { A2, A3 } = await loadStageTasks(stage);
   const n = STAGE_N[stage] ?? 3;
   const conditions = ["bare_claude", "claude_md_only", "full_harness"];
   const cells = [];
   for (const task of A2) {
     for (const c of conditions) {
       for (let t = 0; t < n; t++) {
-        cells.push({ task, condition: c, trialIdx: t });
+        cells.push({ kind: "owasp", task, condition: c, trialIdx: t });
+      }
+    }
+  }
+  for (const sprintName of A3) {
+    for (const c of conditions) {
+      for (let t = 0; t < n; t++) {
+        cells.push({
+          kind: "sprint",
+          sprintName,
+          condition: c,
+          trialIdx: t,
+          // synthetic taskId so existing dedup + logging works
+          task: { id: `sprint-${sprintName}` },
+        });
       }
     }
   }
@@ -166,11 +223,16 @@ async function main() {
     return;
   }
 
-  // Filter to cells that don't have summary.json already — makes runs resumable
+  // Filter to cells that don't have a final artifact already — makes runs resumable
   const pending = shuffled.filter((c) => {
+    if (c.kind === "sprint") {
+      const runId = `${stage}-sprint-${c.sprintName}-${c.condition}-t${c.trialIdx}`;
+      return !existsSync(
+        path.join(RESULTS_ROOT, "raw", runId, "sprint-summary.json"),
+      );
+    }
     const runId = `${stage}-${c.task.id}-${c.condition}-t${c.trialIdx}`;
-    const existing = path.join(RESULTS_ROOT, "raw", runId, "summary.json");
-    return !existsSync(existing);
+    return !existsSync(path.join(RESULTS_ROOT, "raw", runId, "summary.json"));
   });
   console.log(
     `[batch] resumable: ${shuffled.length - pending.length} already done, ${pending.length} remaining`,
@@ -189,12 +251,13 @@ async function main() {
   async function worker(queue) {
     while (queue.length && !aborted) {
       const cell = queue.shift();
-      const res = await runCell(cell.task, cell.condition, cell.trialIdx, stage);
+      const res = await runCell(cell, stage);
       if (res.summary?.costUsd) totalCost += res.summary.costUsd;
       done++;
       const costStr = `$${totalCost.toFixed(2)}/$${budget}`;
+      const label = cell.kind === "sprint" ? `sprint:${cell.sprintName}` : cell.task.id;
       console.log(
-        `[${done}/${shuffled.length}] ${cell.condition} ${cell.task.id} t${cell.trialIdx} cost=${costStr} ${res.error ? "ERR" : res.skipped ? "skip" : "ok"}`,
+        `[${done}/${toRun.length}] ${cell.condition} ${label} t${cell.trialIdx} cost=${costStr} ${res.error ? "ERR " + res.error.slice(0, 80) : res.skipped ? "skip" : "ok"}`,
       );
       results.push({ cell, res });
       if (totalCost > budget) {

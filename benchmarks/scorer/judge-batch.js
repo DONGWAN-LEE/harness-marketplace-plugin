@@ -25,7 +25,12 @@ function parseArgs(argv) {
 
 async function loadTasks() {
   const out = {};
-  for (const dir of ["owasp"]) {
+  for (const dir of [
+    "owasp",
+    "sprint-nextjs-supabase",
+    "sprint-fastapi-postgres",
+    "sprint-game",
+  ]) {
     const d = path.join(BENCHMARKS_ROOT, "tasks", dir);
     if (!existsSync(d)) continue;
     for (const f of (await readdir(d)).filter((f) => f.endsWith(".md"))) {
@@ -40,18 +45,40 @@ async function main() {
   const { stage, concurrency, limit } = parseArgs(process.argv);
   const rawDir = path.join(BENCHMARKS_ROOT, "results", "raw");
   const tasks = await loadTasks();
-  const all = (await readdir(rawDir)).filter((x) => x.startsWith(`${stage}-`));
-  // Build a todo list: runs with summary.json but no judge.json
+  const stageFilter = (x) =>
+    stage === "all" ? true : x.startsWith(`${stage}-`) || (stage === "slim" && x.startsWith("pilot-"));
+  const all = (await readdir(rawDir)).filter(stageFilter);
+
   const todo = [];
   for (const runId of all) {
     const runDir = path.join(rawDir, runId);
-    if (!existsSync(path.join(runDir, "summary.json"))) continue;
-    if (existsSync(path.join(runDir, "judge.json"))) continue;
-    const cond = JSON.parse(await readFile(path.join(runDir, "condition.json"), "utf8"));
-    const task = tasks[cond.taskId];
-    if (!task) continue;
-    const summary = JSON.parse(await readFile(path.join(runDir, "summary.json"), "utf8"));
-    todo.push({ runId, runDir, task, summary });
+    const condPath = path.join(runDir, "condition.json");
+    if (!existsSync(condPath)) continue;
+    const cond = JSON.parse(await readFile(condPath, "utf8"));
+
+    if (cond.kind === "sprint") {
+      // For sprint runs: enumerate step-NN/ subdirs and judge each
+      const sprintSummary = JSON.parse(
+        await readFile(path.join(runDir, "sprint-summary.json"), "utf8"),
+      );
+      for (const s of sprintSummary.steps) {
+        const stepDir = path.join(runDir, `step-${String(s.step).padStart(2, "0")}`);
+        if (!existsSync(path.join(stepDir, "summary.json"))) continue;
+        if (existsSync(path.join(stepDir, "judge.json"))) continue;
+        const task = tasks[s.taskId];
+        if (!task) continue;
+        const summary = JSON.parse(await readFile(path.join(stepDir, "summary.json"), "utf8"));
+        todo.push({ runId: runId + "/step-" + s.step, runDir: stepDir, task, summary });
+      }
+    } else {
+      // OWASP single-task run
+      if (!existsSync(path.join(runDir, "summary.json"))) continue;
+      if (existsSync(path.join(runDir, "judge.json"))) continue;
+      const task = tasks[cond.taskId];
+      if (!task) continue;
+      const summary = JSON.parse(await readFile(path.join(runDir, "summary.json"), "utf8"));
+      todo.push({ runId, runDir, task, summary });
+    }
   }
   const sliced = todo.slice(0, limit);
   console.log(
