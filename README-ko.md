@@ -487,6 +487,7 @@ harness-marketplace/
 │   ├── schemas.md                 # Reference: PlanResult/ImplementationResult/VerificationResult JSON 스키마
 │   ├── guide-injection.md         # Reference: 워커 → 가이드 + 에이전트 체크리스트 매핑
 │   ├── monitor-mode.md            # Reference: /project-harness monitor (CronCreate 기반 idle 자동 감시)
+│   ├── parallel-execution.md      # Reference: Fan-out/Fan-in PARALLEL REQUIRED 규약 (단일 메시지 복수 Task 패턴)
 │   ├── codebase-analysis.md       # Sub-skill: Phase 2.5 사전 분석 (arch/design/deps/impact)
 │   ├── tdd-implementation.md      # Reference: Red-Green-Refactor 전략 (project-implement 조건부)
 │   ├── ui-defect-patterns.md      # Reference: 정적 UI 코드 리뷰 (8 결함 패턴, 조건부: has_ui)

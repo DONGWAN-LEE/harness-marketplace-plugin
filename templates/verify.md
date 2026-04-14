@@ -67,7 +67,52 @@ Run sequentially:
 
 1. If no `--team-name`: TeamCreate: `project-verify-{slug}`
 2. Update state/pipeline-state.json: set current_phase="team-verify"
-3. TaskCreate + spawn workers:
+3. TaskCreate + spawn workers — **전원 parallel (blockedBy: [])**, reader 만 체인.
+
+### PARALLEL REQUIRED — 단일 메시지 내 동시 spawn
+
+**CRITICAL**: 모든 auditor (fixed 4 + conditional up to 10) 는 **단일 assistant 메시지 내 복수 Task tool-use 블록으로 동시에 spawn**. 순차 호출 시 wall-time 이 14배까지 증가 (최악의 경우).
+
+```js
+// ✅ 올바른 형태 — single message, all auditors parallel (blockedBy: []):
+[
+  // Fixed 4 (항상 포함):
+  Task({ subagent_type: "opus-agent", description: "arch-auditor",
+         prompt: "<architecture checklist + layer 위반 검사>" }),
+  Task({ subagent_type: "opus-agent", description: "code-reviewer",
+         prompt: "<logic bugs + type safety + anti-patterns>" }),
+  Task({ subagent_type: "sonnet-agent", description: "type-linter",
+         prompt: "<typecheck + lint 실행>" }),
+  Task({ subagent_type: "sonnet-agent", description: "deploy-validator",
+         prompt: "<build 검증 + 배포 영향 분석>" }),
+
+  // Conditional (활성 플래그 시 추가):
+  // ux-reviewer (has_ui), design-reviewer (has_ui),
+  // db-auditor (has_database), auth-auditor (has_auth),
+  // supabase-security-gate (database=supabase),
+  // seo-verifier (!is_internal_service),
+  // security-auditor (has_security_surface),
+  // domain-{id}-auditor (각 활성 도메인)
+]
+// → 최대 14 auditor 가 동시 실행. wall-time ≈ max(auditor 시간) ≈ 30-60s
+// 순차 실행 시: 14 × 30s = 7 분. 병렬: 1 분 미만.
+
+// ❌ 금지된 형태 (auditor 하나씩 호출):
+// Task(arch-auditor) → 대기 → Task(code-reviewer) → 대기 → ...
+```
+
+### Batch 전환 (rate limit 대응)
+
+`project-config.yaml.pipeline.parallel.max_per_message` (기본 8) 초과 시 자동 batch 분할:
+- Batch 1 (8 개) → 완료 대기 → Batch 2 (나머지) → 완료 대기 → reader
+- batch 내에서는 병렬, batch 간은 순차
+
+### blockedBy 규약
+
+| Task 종류 | blockedBy |
+|---|---|
+| 모든 auditor (fixed + conditional) | `[]` |
+| reader (aggregate) | `[모든 auditor task-id 배열]` |
 
 **Fixed workers (4)**:
 

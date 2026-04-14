@@ -89,7 +89,54 @@ Step 5 (common build gate):
 
 1. If no `--team-name`: TeamCreate: `project-implement-{slug}`
 2. Update state/pipeline-state.json: set current_phase="team-exec"
-3. TaskCreate + spawn workers (sequential order enforced via blockedBy):
+3. TaskCreate + spawn workers — **하이브리드**: 독립 워커는 단일 메시지 내 parallel spawn, 의존 체인은 blockedBy 로 연결.
+
+### PARALLEL vs CHAIN — 워커별 blockedBy 규약
+
+**병렬 시작 (blockedBy: [] — 서로 독립, 한 메시지에서 동시 spawn)**:
+
+- `scaffolder` — 디렉터리 구조 생성. 입력: plan 결과만
+- `test-writer` — acceptance criteria 기반 테스트 작성. 구현 결과 불필요 (TDD 전략에서는 Red 단계)
+- `security-checker` (has_security_surface) — 정적 보안 분석. 독립
+- `ui-checker` (has_ui) — UI 코드 정적 리뷰. 독립 (구현 파일 탐지는 `git status` 로)
+
+→ 4 개 워커를 **단일 메시지 내 4 개 Task tool-use 블록으로 동시 spawn**. wall-time 75% 감소.
+
+**체인 실행 (blockedBy 로 의존 명시)**:
+
+- `implementer` — `blockedBy: [scaffolder-task-id]`. 스캐폴드된 파일에 실제 로직 작성
+- `integrator` — `blockedBy: [implementer-task-id]`. 주변 코드 통합, 라우팅, provider
+- `test-runner` — `blockedBy: [implementer, test-writer]`. 구현 + 테스트 둘 다 필요
+- `build-checker` — `blockedBy: [implementer]`. 최종 typecheck/lint/build
+
+### 예시 — 올바른 병렬 spawn
+
+```js
+// 단일 메시지에 4 개 Task 동시 호출 (모두 blockedBy: []):
+[
+  Task({ subagent_type: "general-purpose",
+         description: "scaffolder",
+         prompt: "<디렉터리 구조 + 파일 boilerplate 생성>" }),
+  Task({ subagent_type: "general-purpose",
+         description: "test-writer",
+         prompt: "<acceptance criteria 기반 실패 테스트>" }),
+  Task({ subagent_type: "security-engineer",
+         description: "security-checker",
+         prompt: "<인증/secret/DB 쿼리 정적 분석>" }),
+  Task({ subagent_type: "general-purpose",
+         description: "ui-checker",
+         prompt: "<ui-defect-patterns 8개 패턴 정적 검사>" })
+]
+// → 4 개 동시 실행. 완료 후 체인 워커 spawn (implementer, integrator, ...)
+```
+
+**금지된 순차 spawn** (wall-time 4배 증가):
+```
+Task(scaffolder) → 대기 → Task(test-writer) → 대기 → Task(security-checker) → 대기 → Task(ui-checker)
+```
+
+자세한 병렬 규약은 `references/parallel-execution.md` §"blockedBy 규약" 참조.
+
 
 **Fixed workers**:
 

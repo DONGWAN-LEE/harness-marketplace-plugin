@@ -1032,6 +1032,7 @@ References (shared UX + data contracts — consumed by all sub-skills):
 - .claude/skills/project-harness/references/schemas.md ← templates/schemas.md
 - .claude/skills/project-harness/references/guide-injection.md ← templates/guide-injection.md
 - .claude/skills/project-harness/references/monitor-mode.md ← templates/monitor-mode.md
+- .claude/skills/project-harness/references/parallel-execution.md ← templates/parallel-execution.md
 
 Conditional:
 - .claude/skills/project-harness/visual-qa/SKILL.md ← templates/visual-qa.md (only if has_ui)
@@ -1238,6 +1239,7 @@ Run validation checks (equivalent to scripts/validate-harness.js):
    - references/handoff-templates.md
    - references/guide-injection.md
    - references/monitor-mode.md
+   - references/parallel-execution.md
    - codebase-analysis/SKILL.md (always copied — Phase 2.5 invokes it conditionally)
    - agents/*.md (at least one)
    - guides/*.md (at least one)

@@ -7,6 +7,71 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added — Enforce real parallel orchestration ([#35](https://github.com/aiAgentDevelop/harness-marketplace-plugin/issues/35))
+
+Closes the "DESIGN-ONLY parallelism" gap identified after PR #34:
+Fan-out/Fan-in was described with ASCII diagrams and prose ("병렬 실행",
+"simultaneously") but **no concrete directive told Claude to spawn
+workers in a single message with multiple Task tool-use blocks**. Without
+that, Claude typically defaulted to sequential execution, losing the
+wall-time benefit of team mode.
+
+- `templates/parallel-execution.md` (new, 222 lines) — central reference
+  explaining the single-message-multi-Task pattern with correct/forbidden
+  code examples, blockedBy conventions, runtime constraints (rate limit
+  batching, fallback), and a checklist of what each phase SKILL.md must
+  contain to guarantee parallelism.
+
+- `templates/plan.md` Phase 1/2 Reader Pattern section — adds "PARALLEL
+  REQUIRED" subsection with a concrete js-flavored example showing 3-4
+  Task calls in one message, and a forbidden sequential counterexample.
+  blockedBy conventions: all explorers/validators → [], reader → depends
+  on all fan-out tasks.
+
+- `templates/implement.md` Phase 4 team-exec — hybrid classification.
+  Parallel-eligible (blockedBy: []): scaffolder, test-writer (TDD Red),
+  security-checker (has_security_surface), ui-checker (has_ui). Chained:
+  implementer [scaffolder], integrator [implementer], test-runner
+  [implementer, test-writer], build-checker [implementer]. Corrects
+  previous "sequential order enforced via blockedBy" blanket statement.
+
+- `templates/verify.md` Phase 7 team-verify — all auditors (4 fixed +
+  up to 10 conditional) set to blockedBy: []. Single-message parallel
+  spawn directive with example listing all conditional activation flags.
+  Batch split via pipeline.parallel.max_per_message when auditor count
+  exceeds the limit.
+
+- `templates/codebase-analysis.md` Step 2 Fan-out — replaces prose Agent
+  listings with concrete js array of 3 parallel Task calls per mode.
+
+### Changed
+
+- `skills/wizard/SKILL.md` Step 5.2 file list and Step 6.1 validation
+  require `references/parallel-execution.md`.
+- `skills/upgrade/SKILL.md` Step 2.6 treats parallel-execution.md as
+  always-overwrite on upgrade (no user content).
+- `templates/orchestrator.md` Related References paragraph gains
+  parallel-execution.md link (file stays at 495 lines).
+- `README.md` + `README-ko.md` Plugin Structure.
+
+### Not changing
+
+- Cross-phase parallelism (plan + visual-qa concurrent) — remains SERIAL
+  by design. Each phase depends on the previous phase's handoff state.
+- Team infrastructure (TeamCreate, SendMessage, TaskCreate/TaskGet,
+  notepad) — already existed; this PR is pure directive additions.
+- Existing projects — no behavior change until wizard re-runs OR
+  `/harness-marketplace:upgrade` overwrites references.
+
+### Expected wall-time impact
+
+- Phase 1 (3 explorers): ~3× faster when parallel-spawn directive is followed
+- Phase 4 independent workers (4 eligible): ~4× faster for the parallel portion
+- Phase 7 (4 fixed + up to 10 conditional auditors): up to ~10-14× faster
+
+Token cost roughly unchanged (same workers, same work). Wall-time
+dramatically reduced.
+
 ### Added — Option Z: port skills_exsample improvements with wizard verification ([#33](https://github.com/aiAgentDevelop/harness-marketplace-plugin/issues/33))
 
 5 items from `~/.claude/skills_exsample/` analysis. Each has explicit
