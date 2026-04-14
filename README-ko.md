@@ -313,9 +313,9 @@ wizard 완료 시 **프로젝트 루트에 `CLAUDE.md` 가 자동 생성**되어
 
 ---
 
-## 마크다운을 넘어서 — 4개의 레이어
+## 마크다운 파일 외에도 — 하네스가 직접 실행하는 4가지
 
-### Layer 1: Hook 기반 코드 강제
+### 1. Hook 기반 코드 강제 (실시간 차단)
 
 에이전트가 가이드라인을 "읽고 따르는" 것이 아니라, Claude Code hook이 코드 레벨에서 **실시간으로 차단하거나 자동 수정**합니다.
 
@@ -339,7 +339,7 @@ wizard 완료 시 **프로젝트 루트에 `CLAUDE.md` 가 자동 생성**되어
 | **Minimal** | 보호 파일만 |
 | **None** | Hook 없음 — 마크다운 전용 harness |
 
-### Layer 2: CI/CD 파이프라인 생성
+### 2. CI/CD 파이프라인 생성
 
 실제 CI/CD 워크플로우 파일을 생성합니다. 위자드 중 또는 `/harness-marketplace:ci-cd`로 독립 설정 가능.
 
@@ -353,7 +353,7 @@ wizard 완료 시 **프로젝트 루트에 `CLAUDE.md` 가 자동 생성**되어
 
 **지원 플랫폼:** GitHub Actions, GitLab CI
 
-### Layer 3: 자기 학습
+### 3. 자기 학습 (Self-Learning)
 
 하네스가 implement/verify 단계에서 발생한 실수로부터 학습하여 **시간이 지날수록 똑똑해집니다**:
 
@@ -366,7 +366,7 @@ AI가 실수 → 회귀 감지 → 수정 적용 →
   → 같은 실수가 다시는 발생하지 않음
 ```
 
-### Layer 4: 디버그 조사 단계
+### 4. 디버그 조사 단계
 
 버그 수정 작업 시, plan과 implement 사이에 **체계적 디버그 단계**가 실행됩니다 — 추측 대신 병렬 조사:
 
@@ -439,11 +439,11 @@ flags:                    # 자동 파생
   has_database: true
   visual_qa_capable: true
 
-enforcement:              # Layer 1 — 코드 강제
+enforcement:              # 1 — 코드 강제 (실시간 차단)
   level: standard
   protected_files: ["**/.env*", "package-lock.json"]
 
-ci_cd:                    # Layer 2 — CI/CD 파이프라인
+ci_cd:                    # 2 — CI/CD 파이프라인
   platform: github-actions
   pipelines:
     - type: ci
@@ -451,7 +451,7 @@ ci_cd:                    # Layer 2 — CI/CD 파이프라인
     - type: ai-review
       enabled: true
 
-self_learning:            # Layer 3 — 자기 학습
+self_learning:            # 3 — 자기 학습
   enabled: true
   mode: approval
   max_auto_rules: 20
@@ -601,11 +601,13 @@ node scorer/aggregate-v2.js --stage slim                       # reports/slim-re
 
 | 버전 | 주요 내용 |
 |------|-----------|
-| [**v0.5.2**](https://github.com/aiAgentDevelop/harness-marketplace-plugin/releases/tag/v0.5.2) | upgrade skill & validate-harness polish (v0.5.1 현장 테스트에서 발견된 이슈 수정) |
+| [**v0.6.0**](https://github.com/aiAgentDevelop/harness-marketplace-plugin/releases/tag/v0.6.0) | Orchestration-by-default (`./CLAUDE.md` 자동 생성) + 실제 병렬 Fan-out/Fan-in 워커 + Phase 2.5 codebase-analysis + TDD 전략 + Supabase 보안 게이트 + monitor mode + Phase 1 v2 벤치마크 |
+| [v0.5.2](https://github.com/aiAgentDevelop/harness-marketplace-plugin/releases/tag/v0.5.2) | upgrade skill & validate-harness polish (v0.5.1 현장 테스트에서 발견된 이슈 수정) |
 | [v0.5.1](https://github.com/aiAgentDevelop/harness-marketplace-plugin/releases/tag/v0.5.1) | upgrade skill이 레거시 v1.x hook을 자동 감지/마이그레이션 |
 | [v0.5.0](https://github.com/aiAgentDevelop/harness-marketplace-plugin/releases/tag/v0.5.0) | ⚠️ BREAKING — hook 템플릿을 Claude Code v2.x 컨트랙트(stdin JSON + exit 2)로 마이그레이션 |
-| [v0.4.0](https://github.com/aiAgentDevelop/harness-marketplace-plugin/releases/tag/v0.4.0) | Agent/Guide 카탈로그 + bugfix 파이프라인용 debug phase |
+| [v0.4.0](https://github.com/aiAgentDevelop/harness-marketplace-plugin/releases/tag/v0.4.0) | Agent/Guide 카탈로그(에이전트 34개 + 가이드 18개) + bugfix 파이프라인용 debug phase |
 | [v0.3.0](https://github.com/aiAgentDevelop/harness-marketplace-plugin/releases/tag/v0.3.0) | 팀 지식 공유를 위한 `learn`, `gh` 스킬 추가 |
+| [v0.2.2](https://github.com/aiAgentDevelop/harness-marketplace-plugin/releases/tag/v0.2.2) | plugin.json `skills` 필드 복원으로 자동완성 지원 + 버전 동기화(plugin/marketplace/package) + 한글 위자드 라벨 |
 | [v0.2.0](https://github.com/aiAgentDevelop/harness-marketplace-plugin/releases/tag/v0.2.0) | 3가지 위자드 모드 + 3-레이어 파이프라인 시스템 |
 | [v0.1.0](https://github.com/aiAgentDevelop/harness-marketplace-plugin/releases/tag/v0.1.0) | 최초 릴리스 |
 

@@ -313,9 +313,9 @@ If a `CLAUDE.md` already exists at project root, the wizard asks whether to (a) 
 
 ---
 
-## Four Layers Beyond Markdown
+## Beyond Markdown Files — Four Things the Harness Actively Runs
 
-### Layer 1: Hook-based Code Enforcement
+### 1. Hook-based Code Enforcement (real-time blocking)
 
 Claude Code hooks that **prevent mistakes before they happen** — not just guidelines for agents to follow, but code-level guards that block or auto-fix in real time.
 
@@ -339,7 +339,7 @@ Claude Code hooks that **prevent mistakes before they happen** — not just guid
 | **Minimal** | Protected files only |
 | **None** | No hooks — markdown-only harness |
 
-### Layer 2: CI/CD Pipeline Generation
+### 2. CI/CD Pipeline Generation
 
 Generates real CI/CD workflow files. Can be configured during wizard or independently via `/harness-marketplace:ci-cd`.
 
@@ -353,7 +353,7 @@ Generates real CI/CD workflow files. Can be configured during wizard or independ
 
 **Supported platforms:** GitHub Actions, GitLab CI
 
-### Layer 3: Self-Learning
+### 3. Self-Learning
 
 The harness **evolves over time** by learning from mistakes during the implement and verify phases:
 
@@ -366,7 +366,7 @@ AI makes mistake → Regression detected → Fix applied →
   → Same mistake can never happen again
 ```
 
-### Layer 4: Debug Investigation Phase
+### 4. Debug Investigation Phase
 
 For bugfix tasks, a **systematic debug phase** runs between plan and implement — replacing guesswork with parallel investigation:
 
@@ -439,11 +439,11 @@ flags:                    # Auto-derived
   has_database: true
   visual_qa_capable: true
 
-enforcement:              # Layer 1 — Code enforcement
+enforcement:              # 1 — Code enforcement (real-time blocking)
   level: standard
   protected_files: ["**/.env*", "package-lock.json"]
 
-ci_cd:                    # Layer 2 — CI/CD pipelines
+ci_cd:                    # 2 — CI/CD pipelines
   platform: github-actions
   pipelines:
     - type: ci
@@ -451,7 +451,7 @@ ci_cd:                    # Layer 2 — CI/CD pipelines
     - type: ai-review
       enabled: true
 
-self_learning:            # Layer 3 — Self-learning
+self_learning:            # 3 — Self-learning
   enabled: true
   mode: approval
   max_auto_rules: 20
@@ -601,11 +601,13 @@ Notable releases:
 
 | Version | Highlight |
 |---------|-----------|
-| [**v0.5.2**](https://github.com/aiAgentDevelop/harness-marketplace-plugin/releases/tag/v0.5.2) | upgrade skill & validate-harness polish (bugs found in post-v0.5.1 field test) |
+| [**v0.6.0**](https://github.com/aiAgentDevelop/harness-marketplace-plugin/releases/tag/v0.6.0) | Orchestration-by-default (auto-generated `./CLAUDE.md`) + real parallel Fan-out/Fan-in workers + Phase 2.5 codebase-analysis + TDD strategy + Supabase security gate + monitor mode + Phase 1 v2 benchmark |
+| [v0.5.2](https://github.com/aiAgentDevelop/harness-marketplace-plugin/releases/tag/v0.5.2) | upgrade skill & validate-harness polish (bugs found in post-v0.5.1 field test) |
 | [v0.5.1](https://github.com/aiAgentDevelop/harness-marketplace-plugin/releases/tag/v0.5.1) | upgrade skill auto-migrates legacy v1.x hooks |
 | [v0.5.0](https://github.com/aiAgentDevelop/harness-marketplace-plugin/releases/tag/v0.5.0) | ⚠️ BREAKING — hook templates migrated to Claude Code v2.x (stdin JSON + exit 2) |
-| [v0.4.0](https://github.com/aiAgentDevelop/harness-marketplace-plugin/releases/tag/v0.4.0) | Agent/guide catalogs + debug phase for bugfix pipeline |
+| [v0.4.0](https://github.com/aiAgentDevelop/harness-marketplace-plugin/releases/tag/v0.4.0) | Agent/guide catalogs (34 agents + 18 guides) + debug phase for bugfix pipeline |
 | [v0.3.0](https://github.com/aiAgentDevelop/harness-marketplace-plugin/releases/tag/v0.3.0) | `learn` and `gh` skills for team knowledge sharing |
+| [v0.2.2](https://github.com/aiAgentDevelop/harness-marketplace-plugin/releases/tag/v0.2.2) | Restore plugin.json `skills` field for auto-completion + version sync (plugin/marketplace/package) + Korean wizard labels |
 | [v0.2.0](https://github.com/aiAgentDevelop/harness-marketplace-plugin/releases/tag/v0.2.0) | Three wizard modes + three-layer pipeline system |
 | [v0.1.0](https://github.com/aiAgentDevelop/harness-marketplace-plugin/releases/tag/v0.1.0) | Initial release |
 
