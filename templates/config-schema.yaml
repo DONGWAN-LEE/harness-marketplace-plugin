@@ -789,6 +789,53 @@ properties:
             description: "Block direct SQL queries in service layer"
             source: "wizard"
 
+  # ─── Pipeline options (implement strategy + codebase analysis) ────────────
+
+  pipeline:
+    type: object
+    description: >
+      Optional pipeline behavior overrides. Defaults are safe for most projects.
+      - implement_strategy: switches project-implement to TDD/BDD workflow when set.
+      - codebase_analysis: controls Phase 2.5 (pre-implement impact/arch analysis).
+    additionalProperties: false
+    properties:
+      implement_strategy:
+        type: string
+        description: >
+          Implementation workflow strategy used by project-implement.
+          - "standard" — scaffolder → implementer → integrator (default)
+          - "tdd" — test-writer (Red) → implementer (Green) → refactorer. Loads references/tdd-implementation.md.
+          - "bdd" — reserved for future. Currently treated as standard with warning.
+        enum: [standard, tdd, bdd]
+        default: standard
+      codebase_analysis:
+        type: object
+        additionalProperties: false
+        properties:
+          auto_on_refactor:
+            type: boolean
+            description: When true, Phase 2.5 runs project-codebase-analysis automatically for project_type=refactor tasks.
+            default: true
+          default_type_for_phase_2_5:
+            type: string
+            description: Analysis type used by automatic Phase 2.5 invocation.
+            enum: [arch, design, deps, impact]
+            default: impact
+          archive_history:
+            type: boolean
+            description: Persist each analysis result under state/analysis-history/ for audit.
+            default: false
+          parallel_explorer_count:
+            type: integer
+            description: Number of fan-out explore workers (1-5).
+            minimum: 1
+            maximum: 5
+            default: 3
+          timeout_per_explorer_ms:
+            type: integer
+            description: Timeout per fan-out worker in milliseconds.
+            default: 180000
+
   # ─── CI/CD ───────────────────────────────────────────────────────────────
 
   ci_cd:
