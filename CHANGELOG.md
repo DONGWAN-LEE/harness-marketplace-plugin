@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.0] - 2026-04-14
+
+### Highlights
+
+이 릴리즈는 v0.5.2 이후 6개 PR (#28, #30, #32, #34, #36, #38) 의 기능을 통합. 주요 추가 사항:
+
+- **Orchestration-by-default** — wizard 가 프로젝트 루트 `./CLAUDE.md` 를 자동 생성하여 `/project-harness` 가 opt-in 이 아닌 기본 작업 방식이 됨 (#30)
+- **실제 병렬 Fan-out/Fan-in** — PARALLEL REQUIRED directive + blockedBy 규약으로 Phase 1 / 4 / 7 / 2.5 워커들이 단일 메시지 내 복수 Task tool-use 로 진짜 동시 실행 (#36). Phase 7 기준 최대 10-14× wall-time 감소
+- **Phase 2.5 `codebase-analysis`** — refactor 작업 전 arch / design / deps / impact 4차원 자동 분석 서브스킬 (#34 H2)
+- **TDD implementation strategy** — Red-Green-Refactor 사이클, test-writer 먼저 실행 (#34 M1)
+- **UI defect patterns** (static UI review) + **FSD scaffold patterns** — `has_ui` / `architecture=fsd` 조건부 활성 (#34 M2/M3)
+- **Supabase security gate** — 17-point RLS / client / auth / storage / API 검증 agent + guide (#34 H1)
+- **Monitor mode** — `/project-harness monitor --backend|--frontend` CronCreate 기반 idle 자동 감시 (#32)
+- **11 reference files** — progress-format, ui-conventions, handoff-templates, schemas, guide-injection, monitor-mode, parallel-execution, tdd-implementation, ui-defect-patterns, fsd-scaffold-patterns, classification (#32, #34, #36)
+- **Game domain 확장** — 4 신규 agents (gs-gacha-compliance, gs-integrity-auditor, t-game-api-architect, t-game-backend-engineer) + 5 guides (game-security, gacha-system, shop-iap, ranking-system, save-system) (#32 Stage C)
+- **Phase 0.5 benchmark infrastructure** — fair 3-layer 평가 (hooks / orchestration / pipeline), 10 adversarial 태스크, 7-dim LLM judge rubric + honesty safeguards (#28)
+
 ### Added — Enforce real parallel orchestration ([#35](https://github.com/aiAgentDevelop/harness-marketplace-plugin/issues/35))
 
 Closes the "DESIGN-ONLY parallelism" gap identified after PR #34:
