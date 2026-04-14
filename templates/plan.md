@@ -282,6 +282,37 @@ The `guides` list in `project-config.yaml` determines which guides are available
 team 모드에서 **여러 워커가 병렬 실행** 후 결과를 한 곳에 수집하는 패턴.
 `schemas.md` 의 PlanResult 에 통합된 형태로 쓰이기 전에 reader 워커가 취합 단계를 거침.
 
+### PARALLEL REQUIRED — 단일 메시지 내 동시 spawn
+
+**CRITICAL**: Phase 1 / Phase 2 의 fan-out 워커들은 **단일 assistant 메시지 내 여러 Task tool-use 블록으로 동시에 spawn**. 순차 호출 금지 — 3 워커 기준 wall-time 이 3배 증가.
+
+```js
+// ✅ 올바른 형태 (Phase 1 — single message, 3-4 parallel Task calls):
+[
+  Task({ subagent_type: "Explore",
+         description: "structure-explorer",
+         prompt: "<프로젝트 구조 탐색 — FSD 레이어 / 모듈 배치 / 파일 목록>" }),
+  Task({ subagent_type: "Explore",
+         description: "dependency-explorer",
+         prompt: "<import/export 그래프 + npm/pip 패키지 영향>" }),
+  Task({ subagent_type: "Explore",
+         description: "pattern-explorer",
+         prompt: "<기존 패턴/컨벤션 수집>" })
+  // + 조건부 도메인 워커 (활성 플래그 시)
+]
+// → 3개 이상 Task 동시 실행. wall-time ≈ max(탐색 시간) + reader merge
+
+// ❌ 금지된 형태 (sequential — 보수적 Claude 가 자주 하는 실수):
+// Task(structure) → 완료 대기 → Task(dependency) → 완료 대기 → Task(pattern)
+// wall-time = sum(탐색 시간). 3배 느림.
+```
+
+**blockedBy 규약** (TaskCreate 호출 시):
+- 모든 explorer / validator: `blockedBy: []` (독립 실행)
+- reader 워커: `blockedBy: [structure-task-id, dependency-task-id, pattern-task-id, ...domain-task-ids]` (전부 완료 후)
+
+Reader 본체는 단일 tool call 로 각 결과 `TaskGet` 으로 읽어 merge. 자세한 규약은 `references/parallel-execution.md` 참조.
+
 ### Phase 1 — 분석 (Fan-out / Fan-in)
 
 ```

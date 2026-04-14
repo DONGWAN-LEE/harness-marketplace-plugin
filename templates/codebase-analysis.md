@@ -90,18 +90,23 @@ Phase 2.5 자동 실행 시 orchestrator 가 `--type impact <plan.files_to_modif
 
 ### Step 2: Fan-out — 병렬 Explore 에이전트 스폰
 
-type 별로 3-4 개 explorer 를 병렬 스폰:
+**PARALLEL REQUIRED**: type 별 3-4 개 explorer 를 **단일 메시지 내 복수 Task tool-use 블록으로 동시 spawn**. 순차 호출 금지 (3 explorer 기준 wall-time 3배 증가). 자세한 규약은 `references/parallel-execution.md`.
 
-**arch 모드**:
-```
-Agent 1 (subagent_type: Explore):
-  prompt: "FSD 레이어 분석 — app/pages/widgets/features/entities/shared 간 의존성 방향. 역방향 import 목록 수집."
+**arch 모드** — single message with 3 parallel Task calls:
 
-Agent 2 (subagent_type: Explore):
-  prompt: "모듈 결합도 — 각 모듈의 import 개수 + 공통 util 사용률 통계."
-
-Agent 3 (subagent_type: Explore):
-  prompt: "안티패턴 감지 — 500+ 라인 파일, 4+ nesting, duplicate logic hotspot."
+```js
+[
+  Task({ subagent_type: "Explore",
+         description: "arch-layer-explorer",
+         prompt: "FSD 레이어 분석 — app/pages/widgets/features/entities/shared 간 의존성 방향. 역방향 import 목록 수집." }),
+  Task({ subagent_type: "Explore",
+         description: "arch-coupling-explorer",
+         prompt: "모듈 결합도 — 각 모듈의 import 개수 + 공통 util 사용률 통계." }),
+  Task({ subagent_type: "Explore",
+         description: "arch-antipattern-explorer",
+         prompt: "안티패턴 감지 — 500+ 라인 파일, 4+ nesting, duplicate logic hotspot." })
+]
+// 모든 Task: blockedBy: [] (독립 실행)
 ```
 
 **design 모드**:
