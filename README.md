@@ -487,6 +487,10 @@ harness-marketplace/
 │   ├── schemas.md                 # Reference: JSON schemas for PlanResult/ImplementationResult/VerificationResult
 │   ├── guide-injection.md         # Reference: worker → guide + agent checklist mapping
 │   ├── monitor-mode.md            # Reference: /project-harness monitor (CronCreate-based idle auto-watch)
+│   ├── codebase-analysis.md       # Sub-skill: Phase 2.5 pre-impl analysis (arch/design/deps/impact)
+│   ├── tdd-implementation.md      # Reference: Red-Green-Refactor strategy for project-implement (conditional)
+│   ├── ui-defect-patterns.md      # Reference: static UI code review (8 defect patterns, conditional: has_ui)
+│   ├── fsd-scaffold-patterns.md   # Reference: FSD entity/feature/widget boilerplate (conditional: architecture=fsd)
 │   ├── config-schema.yaml         # Config schema (context, enforcement, ci_cd, self_learning)
 │   ├── classification.md          # Task classification rules (with debug complexity)
 │   ├── hooks/                     # Hook script templates (8 scripts + config + 2 v2.x helpers)

@@ -7,6 +7,112 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added — Option Z: port skills_exsample improvements with wizard verification ([#33](https://github.com/aiAgentDevelop/harness-marketplace-plugin/issues/33))
+
+5 items from `~/.claude/skills_exsample/` analysis. Each has explicit
+wizard integration path + activation condition so wizard-generated
+projects get exactly the right subset of additions.
+
+**H1 — Supabase security gate**:
+- New `supabase-security-gate` agent in `data/agents.yaml` (security
+  domain, model: opus). 17-point deep checklist across Table / Client /
+  Auth / Storage / API security. Binary PASS/BLOCK verdict. Complements
+  existing auth-auditor + db-auditor which are general-purpose.
+- New `supabase-security` guide in `data/guides.yaml` (development domain)
+  with companion patterns for the 17 checks.
+- Activation: `recommended_when: [has_database]` — wizard auto-checks
+  when Supabase selected; user can deselect in Step 4.
+- Wizard flow: Step 5.3 AI-generates `agents/supabase-security-gate.md`
+  and `guides/supabase-security.md`. Step 6.1 validates presence.
+- Verify integration: templates/verify.md Failure Tiers table gains
+  supabase-security-gate row with BLOCK/WARN/INFO mapping.
+
+**H2 — codebase-analysis sub-skill (Phase 2.5)**:
+- New `templates/codebase-analysis.md` (226 lines) copied to
+  `.claude/skills/project-harness/codebase-analysis/SKILL.md`.
+- 4 analysis types: arch (FSD compliance, coupling, anti-patterns) /
+  design (patterns, state, error) / deps (unused, vuln, outdated) /
+  impact (direct/indirect importers, affected zones).
+- Fan-out Explore agents + Fan-in reader worker per plan.md §Reader Pattern.
+- templates/orchestrator.md gains Phase 2.5 stanza between Phase 0-3
+  and Phase 3.5. Auto-trigger: `project_type == "refactor" AND
+  pipeline.codebase_analysis.auto_on_refactor`. Manual: `--analysis-first`.
+- templates/config-schema.yaml: new `pipeline.codebase_analysis` section
+  with auto_on_refactor / default_type / archive_history / parallel_count
+  / timeout fields.
+- Wizard Step E6 question: "refactor 자동 분석?" (default yes).
+
+**M1 — TDD implementation strategy**:
+- New `templates/tdd-implementation.md` (276 lines) copied to
+  `references/tdd-implementation.md` when
+  `pipeline.implement_strategy != "standard"`.
+- Red-Green-Refactor cycle with test-writer → implementer → refactorer
+  worker chain replacing standard scaffolder → implementer → integrator.
+- Framework-specific tooling: Vitest + Testing Library (FE), pytest
+  or Vitest + Supabase mock (BE). Optional E2E via --e2e flag.
+- templates/implement.md: new "Implementation Strategy Switch" section
+  with standard/tdd/bdd enum + {{CONDITION:implement_strategy_tdd}}
+  rendering logic.
+- templates/config-schema.yaml: `pipeline.implement_strategy` enum
+  (standard default).
+- Wizard Step E5 question: "구현 전략? [standard/tdd/bdd]".
+
+**M2 — UI defect patterns**:
+- New `templates/ui-defect-patterns.md` (327 lines) copied to
+  `references/ui-defect-patterns.md` when `flags.has_ui == true`.
+- 8 static code-review patterns with bad/good examples + underlying
+  mechanic: overflow, truncate, min-w-0 flex shrink, spacing
+  inconsistency, vertical-align, responsive breakpoints, padding
+  consistency, border-radius token adherence.
+- Design system token enforcement section (color / spacing / radius /
+  shadow / font-size).
+- ui-checker (Phase 4) auto-fixes clear defects via Edit;
+  ux-reviewer (Phase 7) read-only analysis feeds
+  VerificationResult.conditional_checks.ux_review.
+- Complementary to runtime visual-qa.md (not a replacement).
+- templates/guide-injection.md: mapping updates for ui-designer (Phase 2),
+  ui-checker (Phase 4), ux-reviewer (Phase 7).
+
+**M3 — FSD scaffold patterns**:
+- New `templates/fsd-scaffold-patterns.md` (386 lines) copied to
+  `references/fsd-scaffold-patterns.md` when
+  `tech_stack.architecture == "fsd"`.
+- Entity / Feature / Widget layer scaffolds with concrete file templates:
+  types.ts, queries.ts, mutations.ts (TanStack Query), Zustand store,
+  UI Card, public API re-export hub.
+- Public API encapsulation rule: external layers must import via module
+  root index.ts, never internal files.
+- scaffolder worker (Phase 4) loads this reference and auto-generates
+  full module directory tree with TODO-placeholder boilerplate.
+- templates/guide-injection.md: scaffolder row gains fsd-scaffold-patterns
+  (conditional on architecture=fsd) in Phase 4 mapping + summary table.
+
+### Changed
+
+- `skills/wizard/SKILL.md`: Step 5.2 file list expanded (1 sub-skill +
+  3 conditional references). Phase 2.5 gains Steps E5/E6. project-config.yaml
+  construction step 15 writes pipeline.implement_strategy + pipeline.codebase_analysis.
+  Step 6.1 validation requires new files.
+- `skills/upgrade/SKILL.md`: new Step 2.6 handles Option Z additions on
+  upgrade — 7 always-overwrite (no user content) + 3 conditional
+  (re-evaluated per current flags) + supabase agent/guide prompts user.
+- `templates/orchestrator.md`: Phase 2.5 codebase-analysis stanza inserted;
+  Related References compacted to stay at 495 lines (under 500 threshold).
+- `templates/config-schema.yaml`: new top-level `pipeline` section with
+  implement_strategy (enum) + codebase_analysis (object with 5 fields).
+- `templates/verify.md`: Failure Tiers mapping gains supabase-security-gate
+  activation condition + BLOCK/WARN/INFO breakdown.
+
+### File size discipline (all under 500 lines)
+
+| New file | Lines |
+|---|---|
+| templates/codebase-analysis.md | 226 |
+| templates/tdd-implementation.md | 276 |
+| templates/ui-defect-patterns.md | 327 |
+| templates/fsd-scaffold-patterns.md | 386 |
+| templates/orchestrator.md (after edit) | 495 |
+
 ### Added — Port backup-harness UX/infrastructure/game-domain improvements ([#31](https://github.com/aiAgentDevelop/harness-marketplace-plugin/issues/31))
 
 Stage A-D rollout porting proven patterns from the user's backup harness

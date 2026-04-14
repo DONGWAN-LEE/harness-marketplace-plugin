@@ -487,6 +487,10 @@ harness-marketplace/
 │   ├── schemas.md                 # Reference: PlanResult/ImplementationResult/VerificationResult JSON 스키마
 │   ├── guide-injection.md         # Reference: 워커 → 가이드 + 에이전트 체크리스트 매핑
 │   ├── monitor-mode.md            # Reference: /project-harness monitor (CronCreate 기반 idle 자동 감시)
+│   ├── codebase-analysis.md       # Sub-skill: Phase 2.5 사전 분석 (arch/design/deps/impact)
+│   ├── tdd-implementation.md      # Reference: Red-Green-Refactor 전략 (project-implement 조건부)
+│   ├── ui-defect-patterns.md      # Reference: 정적 UI 코드 리뷰 (8 결함 패턴, 조건부: has_ui)
+│   ├── fsd-scaffold-patterns.md   # Reference: FSD entity/feature/widget boilerplate (조건부: architecture=fsd)
 │   ├── config-schema.yaml         # 설정 스키마 (context, enforcement, ci_cd, self_learning)
 │   ├── classification.md          # 작업 분류 규칙 (디버그 복잡도 포함)
 │   ├── hooks/                     # Hook 스크립트 템플릿 (8 스크립트 + 설정 + v2.x helper 2개)
