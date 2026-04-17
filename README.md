@@ -91,7 +91,7 @@ If typing `/harness-marketplace:` does not show skills in the dropdown:
 
 ## Usage
 
-### 5 Skills at a Glance
+### 6 Skills at a Glance
 
 | Skill | Command | Purpose |
 |-------|---------|---------|
@@ -100,6 +100,7 @@ If typing `/harness-marketplace:` does not show skills in the dropdown:
 | **CI/CD** | `/harness-marketplace:ci-cd` | Configure CI/CD pipelines independently |
 | **Learn** | `/harness-marketplace:learn` | Save team-shared learnings to git-tracked files |
 | **GH** | `/harness-marketplace:gh` | Automate GitHub workflow (Issue → Branch → PR) |
+| **Launch-Check** | `/harness-marketplace:launch-check` | Pre-launch readiness gate — safety net + operational readiness audit |
 
 ### Generated Harness Commands
 
@@ -342,6 +343,60 @@ The generated `CLAUDE.md` contains:
 - **`## Custom Rules` section** — your team's project-specific rules, preserved across `/harness-marketplace:upgrade` via HTML-comment markers
 
 If a `CLAUDE.md` already exists at project root, the wizard asks whether to (a) merge only the GENERATED region, (b) backup and fully replace, or (c) skip.
+
+---
+
+## Observability (required at wizard time)
+
+A service that ships without error tracking, product analytics, and a health signal is effectively blind in production. The wizard treats observability selection as a **required gate**, not an optional add-on. You pick at least an error-tracking platform before Phase 5 generation runs.
+
+### What the wizard asks (Phase 4, Step D)
+
+| Question | Required? | Catalog source |
+|---|---|---|
+| Q-D.1 — Error-tracking platform | **Yes, exactly one** | `data/observability-platforms.yaml` → `error_tracking` + `native` |
+| Q-D.2 — Product analytics platform(s) | Optional, zero or more | `data/observability-platforms.yaml` → `product_analytics` + `native` |
+| Q-D.3 — APM / logs backend (when `has_backend`) | Optional, zero or one | `data/observability-platforms.yaml` → `apm` + `logs_metrics` + `vendor_neutral` |
+
+The catalog currently lists 11 platforms: Sentry, Rollbar, Datadog, New Relic, PostHog, Amplitude, Plausible, Grafana Cloud, Axiom, OpenTelemetry, Vercel Analytics. Two of these ship with ready-to-use boilerplate templates today (Sentry, PostHog); the others emit a `TODO.md` stub with a link to the official docs.
+
+### What gets generated
+
+When you pick a platform with `integration_template_path` set (currently Sentry + PostHog), the wizard emits boilerplate directly into your project:
+
+- **Sentry + Next.js** → `instrumentation.ts`, `app/error-boundary.tsx`, `app/api/health/route.ts`
+- **Sentry + Node backend** → `src/instrument.ts`, health check endpoint
+- **PostHog + Next.js** → `app/providers/posthog-provider.tsx`, `docs/events-catalog.md`
+
+All generated files end with a `═══ CUSTOM RULES BELOW (preserved on upgrade) ═══` marker, so your team's edits survive `/harness-marketplace:upgrade`.
+
+The wizard also appends the `observability-auditor` agent and the `observability-fundamentals` guide to your harness, so every verify phase re-checks that the error boundary, health check, and SDK init are still wired.
+
+---
+
+## Pre-Launch Audit — `/harness-marketplace:launch-check`
+
+`verify` runs on every change. `launch-check` runs **once per release candidate** and covers the axes `verify` intentionally does not: service-operational readiness, legal / compliance, testing completeness, and runbook presence.
+
+| Section | Status today | Blocking? |
+|---|---|---|
+| 1. Safety Net (delegates to `verify`) | Implemented | BLOCK on failure |
+| 2. Service Operational Readiness | **Fully implemented** (7 checks) | BLOCK on failure |
+| 3. Legal / Compliance | Placeholder (warns) | WARN only |
+| 4. Testing Completeness | Placeholder (warns) | WARN only |
+| 5. Runbooks & Playbooks | Placeholder (warns) | WARN only |
+
+### Section 2 checks
+
+1. Observability platforms are connected (`observability.error_tracking.platform_id` set + env vars declared)
+2. Top-level error boundary exists when `has_ui`
+3. Error-capture SDK init is present on both client and server
+4. Health check endpoint exists when `has_backend`
+5. Rollback workflow or platform-level rollback is present
+6. Release identifier (SHA/tag) is injected in CI
+7. Cost estimate file is present (placeholder for the cost-guard P1)
+
+Failing any Section 1 or Section 2 check returns exit code 1, which a `deploy-prod.yml` workflow can gate on. Sections 3–5 remain WARN until their real implementations ship as follow-up PRs.
 
 ---
 

@@ -91,7 +91,7 @@ cp -r harness-marketplace/ ~/.claude/plugins/cache/harness-marketplace/harness-m
 
 ## 사용법
 
-### 5가지 스킬 한눈에 보기
+### 6가지 스킬 한눈에 보기
 
 | 스킬 | 명령어 | 용도 |
 |------|--------|------|
@@ -100,6 +100,7 @@ cp -r harness-marketplace/ ~/.claude/plugins/cache/harness-marketplace/harness-m
 | **CI/CD** | `/harness-marketplace:ci-cd` | CI/CD 파이프라인 독립 설정 |
 | **Learn** | `/harness-marketplace:learn` | 팀 학습을 git-tracked 파일로 저장 |
 | **GH** | `/harness-marketplace:gh` | GitHub 워크플로우 자동화 (Issue → Branch → PR) |
+| **Launch-Check** | `/harness-marketplace:launch-check` | 출시 전 준비도 게이트 — 안전망 + 서비스 운영 준비도 감사 |
 
 ### 생성된 Harness 명령어
 
@@ -342,6 +343,60 @@ wizard 완료 시 **프로젝트 루트에 `CLAUDE.md` 가 자동 생성**되어
 - **`## Custom Rules` 섹션** — 팀의 프로젝트별 규칙. `/harness-marketplace:upgrade` 시 HTML 주석 마커로 **그대로 보존**
 
 프로젝트 루트에 이미 `CLAUDE.md` 가 있으면 wizard 가 (a) GENERATED 구간만 병합, (b) 백업 후 전체 교체, (c) 건너뛰기 중 선택하도록 묻습니다.
+
+---
+
+## 관측성 (Wizard 실행 시 필수)
+
+에러 추적, 프로덕트 분석, 헬스 시그널 없이 출시한 서비스는 프로덕션에서 사실상 눈을 감은 상태입니다. Wizard는 관측 스택 선택을 **옵션이 아닌 필수 게이트**로 취급합니다. Phase 5 생성 단계에 들어가기 전에 최소 하나의 에러 추적 플랫폼을 반드시 선택해야 합니다.
+
+### Wizard 가 묻는 내용 (Phase 4, Step D)
+
+| 질문 | 필수 여부 | 카탈로그 출처 |
+|---|---|---|
+| Q-D.1 — 에러 추적 플랫폼 | **필수, 정확히 1개** | `data/observability-platforms.yaml` → `error_tracking` + `native` |
+| Q-D.2 — 프로덕트 분석 플랫폼 | 선택, 0개 이상 | `data/observability-platforms.yaml` → `product_analytics` + `native` |
+| Q-D.3 — APM / 로그 백엔드 (`has_backend` 시) | 선택, 0 또는 1개 | `data/observability-platforms.yaml` → `apm` + `logs_metrics` + `vendor_neutral` |
+
+카탈로그에 현재 등재된 11개 플랫폼: Sentry, Rollbar, Datadog, New Relic, PostHog, Amplitude, Plausible, Grafana Cloud, Axiom, OpenTelemetry, Vercel Analytics. 이 중 2개(Sentry, PostHog)는 바로 쓸 수 있는 보일러플레이트 템플릿을 제공하며, 나머지는 공식 문서 링크가 담긴 `TODO.md` 스텁을 방출합니다.
+
+### 생성되는 파일
+
+`integration_template_path`가 설정된 플랫폼(현재 Sentry + PostHog)을 선택하면 wizard가 보일러플레이트를 프로젝트에 바로 써넣습니다:
+
+- **Sentry + Next.js** → `instrumentation.ts`, `app/error-boundary.tsx`, `app/api/health/route.ts`
+- **Sentry + Node 백엔드** → `src/instrument.ts`, 헬스체크 엔드포인트
+- **PostHog + Next.js** → `app/providers/posthog-provider.tsx`, `docs/events-catalog.md`
+
+모든 생성 파일은 `═══ CUSTOM RULES BELOW (preserved on upgrade) ═══` 마커로 끝나므로 팀의 수정 사항은 `/harness-marketplace:upgrade` 를 거쳐도 보존됩니다.
+
+Wizard는 동시에 `observability-auditor` 에이전트와 `observability-fundamentals` 가이드를 harness에 자동 추가하여, 매 verify 단계마다 에러 바운더리·헬스체크·SDK 초기화가 여전히 연결되어 있는지 재확인합니다.
+
+---
+
+## 출시 전 감사 — `/harness-marketplace:launch-check`
+
+`verify`는 매 변경마다 돕니다. `launch-check`는 **릴리스 후보 하나당 1회** 실행되며, verify가 의도적으로 다루지 않는 축 — 서비스 운영 준비도, 법적·규정 준수, 테스트 완결성, 플레이북 존재 — 을 점검합니다.
+
+| Section | 현재 상태 | 차단 여부 |
+|---|---|---|
+| 1. 안전망 (verify 위임) | 구현됨 | 실패 시 BLOCK |
+| 2. 서비스 운영 준비도 | **완전 구현** (7개 체크) | 실패 시 BLOCK |
+| 3. 법적 / 규정 준수 | Placeholder (경고만) | WARN only |
+| 4. 테스트 완결성 | Placeholder (경고만) | WARN only |
+| 5. 런북 & 플레이북 | Placeholder (경고만) | WARN only |
+
+### Section 2 체크 항목
+
+1. 관측 플랫폼 연결 확인 (`observability.error_tracking.platform_id` 설정 + env var 선언)
+2. `has_ui`일 때 최상위 에러 바운더리 존재
+3. 에러 캡처 SDK 초기화가 클라이언트와 서버 양쪽에 존재
+4. `has_backend`일 때 헬스체크 엔드포인트 존재
+5. 롤백 워크플로우 또는 플랫폼 수준 롤백 존재
+6. 릴리스 식별자(SHA/tag)가 CI에서 주입됨
+7. 비용 산정 파일 존재 (cost-guard P1 placeholder)
+
+Section 1 또는 Section 2 체크 중 하나라도 실패하면 exit 1을 반환하므로 `deploy-prod.yml` 워크플로우에서 이를 관문으로 삼을 수 있습니다. Section 3–5는 본 구현이 후속 PR로 들어올 때까지 WARN 수준에 머뭅니다.
 
 ---
 
