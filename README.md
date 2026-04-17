@@ -4,11 +4,48 @@
 [![License](https://img.shields.io/github/license/aiAgentDevelop/harness-marketplace-plugin)](./LICENSE)
 [![Changelog](https://img.shields.io/badge/changelog-keep--a--changelog-brightgreen)](./CHANGELOG.md)
 
-**Scaffolding wizard that generates project-specific development pipeline harness skills for Claude Code.**
+**A 15-minute scaffolding wizard that gives your team a production-ready AI development pipeline for Claude Code.**
 
-Generate a complete AI-orchestrated development pipeline — [interview] → classify → plan → [codebase-analysis] → [debug] → implement → [visual-qa] → verify — with **real parallel Fan-out/Fan-in workers**, code-level enforcement via hooks, CI/CD pipeline generation, idle auto-watch, and self-learning capabilities. Three wizard modes: AI-driven interview, manual selection, or auto-detection. **Interview mode** (`/project-interview`) runs a multi-round deep service interview to produce a comprehensive PRD with domain-expert agents, development team composition, and implementation clarity tracking across 10 dimensions. A project-root `CLAUDE.md` is generated so `/project-harness` becomes the **default** working mode, not opt-in. One wizard, any project.
+One command generates the whole thing — interview → classify → plan → implement → verify → launch-check — with real parallel workers, code-level hooks, CI/CD pipelines, observability wiring, and a `CLAUDE.md` that turns `/project-harness` into the default way your team ships. Built for **small teams who want to build a service, not maintain another prompt library.**
 
 > **[한국어 (Korean)](./README-ko.md)**
+
+---
+
+## Why this exists
+
+If you've used Claude Code on anything larger than a toy project, you've probably hit at least two of these:
+
+- **"We'll wire Sentry later."** Later never comes. The first prod 5xx is a mystery.
+- **"Our CLAUDE.md is a paragraph."** Every session starts from zero context.
+- **"The AI forgot our conventions again."** Because there's no code-level guard — only hope.
+- **"Who's going to write the plan / implement / verify pipeline?"** Nobody has the afternoon.
+
+This plugin replaces all of that with a single wizard run. You answer 5–25 questions (depending on mode), and you walk away with a pipeline a small team can actually depend on — including an observability gate that refuses to let you ship blind.
+
+And we publish our own benchmark showing **exactly where the plugin wins and where it doesn't**. See [Honest Benchmarks](#honest-benchmarks-phase-1-v2--endtoend-isoiec-25010--owasp-asvs--dora) below — we're the plugin that admits most of its value comes from the CLAUDE.md it writes, not magic.
+
+---
+
+## Quick Start
+
+```bash
+# 1. Install (one-time)
+/plugin marketplace add https://github.com/aiAgentDevelop/harness-marketplace-plugin.git
+/plugin install harness-marketplace
+# ↑ fully restart Claude Code after this — see Installation below
+
+# 2. Scaffold your harness (5–15 minutes)
+cd <your-project>
+/harness-marketplace:wizard
+
+# 3. Ship
+/project-harness "implement user authentication"
+# ↑ the wizard wrote a CLAUDE.md that makes this command do everything:
+#   plan → implement → verify, with hooks + observability + CI
+```
+
+That's it. When you're ready to ship to production, `/harness-marketplace:launch-check` runs a pre-launch audit — error tracking wired? health check present? rollback path? — and blocks deploy if you forgot.
 
 ---
 
@@ -90,6 +127,8 @@ If typing `/harness-marketplace:` does not show skills in the dropdown:
 > **Note:** There are open Claude Code issues ([#18949](https://github.com/anthropics/claude-code/issues/18949), [#35641](https://github.com/anthropics/claude-code/issues/35641)) where marketplace plugin skills may not appear in auto-completion. This is a Claude Code runtime limitation, not a plugin bug. Full session restart is the most reliable workaround.
 
 ## Usage
+
+**Pick your entry point**: new project → `wizard` (Deep Interview mode). Existing project → `wizard` (Auto-Detect mode). Already have a harness → `upgrade`. Want to ship? → `launch-check`.
 
 ### 6 Skills at a Glance
 
@@ -630,7 +669,7 @@ harness-marketplace/
 
 - **Claude Code** with Agent Teams enabled (`CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1`)
 
-## Benchmarks (Phase 1 v2 — End-to-End, ISO/IEC 25010 + OWASP ASVS + DORA)
+## Honest Benchmarks (Phase 1 v2 — End-to-End, ISO/IEC 25010 + OWASP ASVS + DORA)
 
 End-to-end empirical evaluation of `Plain Claude Code` vs `harness-marketplace` (v0.6.0 wizard output) grounded in international standards (ISO/IEC 25010, OWASP ASVS v4.0.3, OWASP Top 10 2021, CWE Top 25, DORA, HELM principles). Replaces the earlier Phase 0.5 single-task design (accessible via git history at commit `a455abe`).
 
@@ -702,6 +741,21 @@ Notable releases:
 | [v0.1.0](https://github.com/aiAgentDevelop/harness-marketplace-plugin/releases/tag/v0.1.0) | Initial release |
 
 **Upgrading from v0.4.x or earlier?** v0.5.0 is a breaking hook contract migration. After updating the plugin, run `/harness-marketplace:upgrade` in each project — v0.5.1+ auto-detects legacy v1.x hooks and replaces them with the v2.x format (your old hooks are preserved in a timestamped backup).
+
+## Try it on a throwaway directory first
+
+Worried about installing a wizard that touches `.claude/settings.json` and writes CLAUDE.md into your real project? Don't be — test it in an empty dir first:
+
+```bash
+mkdir harness-try && cd harness-try
+/harness-marketplace:wizard
+# pick Manual mode, say "no" to CI/CD, pick Sentry + PostHog at Step D
+# → inspect the generated .claude/skills/project-harness/ tree
+```
+
+No git repo, no dependencies, no side effects on your real codebase. Delete when done.
+
+---
 
 ## Acknowledgments
 

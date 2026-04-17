@@ -4,11 +4,48 @@
 [![License](https://img.shields.io/github/license/aiAgentDevelop/harness-marketplace-plugin)](./LICENSE)
 [![Changelog](https://img.shields.io/badge/changelog-keep--a--changelog-brightgreen)](./CHANGELOG.md)
 
-**프로젝트 맞춤형 개발 파이프라인 harness 스킬을 생성하는 스캐폴딩 위자드 — Claude Code 플러그인**
+**15분 만에 팀이 의존할 수 있는 프로덕션급 AI 개발 파이프라인을 생성하는 Claude Code 스캐폴딩 위자드.**
 
-프로젝트 유형, 기술 스택, 배포 환경에 맞는 완전한 **AI 오케스트레이션 개발 파이프라인** ([interview] → classify → plan → [codebase-analysis] → [debug] → implement → [visual-qa] → verify) 을 생성합니다. **실제 병렬 Fan-out/Fan-in 워커**, Hook 기반 코드 강제, CI/CD 파이프라인 생성, idle 자동 감시, 자기 학습 기능을 포함. 3가지 위자드 모드: AI 딥 인터뷰, 직접 선택, 기존 코드 자동 감지. **인터뷰 모드** (`/project-interview`)는 다중 라운드 딥 서비스 인터뷰를 실행하여 도메인 전문가 에이전트, 개발 팀 구성, 10개 차원의 구현 명확도 추적이 포함된 종합 PRD를 생성합니다. **프로젝트 루트에 `CLAUDE.md` 가 자동 생성**되어 `/project-harness` 가 opt-in 이 아닌 **기본** 작업 방식이 됩니다. 하나의 위자드로 모든 프로젝트를 지원합니다.
+한 번의 위자드 실행으로 interview → classify → plan → implement → verify → launch-check 까지 전부 생성됩니다. 실제 병렬 워커, 코드 레벨 훅, CI/CD 파이프라인, 관측성 배선까지 포함되고, 프로젝트 루트에 자동 생성되는 `CLAUDE.md` 가 `/project-harness` 를 팀의 기본 개발 명령으로 만듭니다. **"프롬프트 템플릿 하나 더 유지하는 것"이 아니라 서비스를 만드는 소규모팀** 을 위한 도구입니다.
 
 > **[English](./README.md)**
+
+---
+
+## 이 플러그인이 존재하는 이유
+
+Claude Code 로 토이 프로젝트 이상을 해본 팀이라면 다음 중 두 개 이상을 겪어봤을 겁니다:
+
+- **"Sentry 는 나중에 연결하지 뭐."** 그 "나중"은 안 옵니다. 프로덕션 첫 5xx 가 미스터리로 남습니다.
+- **"우리 CLAUDE.md 는 한 문단짜리."** 매 세션이 context zero 에서 시작합니다.
+- **"AI 가 우리 컨벤션을 또 잊었다."** 코드 레벨 가드가 없고 "알아서 잘 하길" 기대만 있으니까요.
+- **"plan / implement / verify 파이프라인을 누가 쓰지?"** 반나절 낼 사람이 없습니다.
+
+이 플러그인은 이 모든 문제를 한 번의 위자드 실행으로 대체합니다. 모드에 따라 5–25개 질문에 답하면, 소규모팀이 실제로 의존할 수 있는 파이프라인이 나옵니다. 관측성 게이트까지 포함되어 — 에러 추적 없이는 배포 자체가 막힙니다.
+
+그리고 자체 벤치마크로 **이 플러그인이 어디서 이기고 어디서 지는지** 공개합니다. 아래 [Honest Benchmarks](#honest-benchmarks-phase-1-v2--endtoend-isoiec-25010--owasp-asvs--dora) 섹션을 보세요 — "우리가 만든 플러그인 가치의 대부분은 마법이 아니라 위자드가 써준 CLAUDE.md 에서 온다" 고 스스로 밝히는 플러그인입니다.
+
+---
+
+## Quick Start
+
+```bash
+# 1. 설치 (최초 1회)
+/plugin marketplace add https://github.com/aiAgentDevelop/harness-marketplace-plugin.git
+/plugin install harness-marketplace
+# ↑ 설치 후 Claude Code 를 완전히 재시작하세요 — 아래 설치 섹션 참조
+
+# 2. harness 스캐폴드 (5–15분)
+cd <your-project>
+/harness-marketplace:wizard
+
+# 3. 개발 시작
+/project-harness "사용자 인증 구현"
+# ↑ 위자드가 써준 CLAUDE.md 가 이 명령을 자동으로 다음과 같이 풀어줍니다:
+#   plan → implement → verify, hooks + 관측성 + CI 포함
+```
+
+이게 전부입니다. 프로덕션 배포 전에 `/harness-marketplace:launch-check` 가 출시 전 감사를 돕니다 — 에러 추적 연결됐나? 헬스체크 있나? 롤백 경로 있나? 빠뜨린 게 있으면 배포를 막아줍니다.
 
 ---
 
@@ -90,6 +127,8 @@ cp -r harness-marketplace/ ~/.claude/plugins/cache/harness-marketplace/harness-m
 > **참고:** Claude Code의 미해결 이슈([#18949](https://github.com/anthropics/claude-code/issues/18949), [#35641](https://github.com/anthropics/claude-code/issues/35641))로 인해 마켓플레이스 플러그인 스킬이 자동완성에 표시되지 않을 수 있습니다. 이는 플러그인 버그가 아닌 Claude Code 런타임 제한사항입니다. 세션 완전 재시작이 가장 확실한 우회 방법입니다.
 
 ## 사용법
+
+**시작 지점 고르기**: 새 프로젝트 → `wizard` (Deep Interview 모드). 기존 프로젝트 → `wizard` (Auto-Detect 모드). 이미 harness 가 있다면 → `upgrade`. 출시 준비 → `launch-check`.
 
 ### 6가지 스킬 한눈에 보기
 
@@ -630,7 +669,7 @@ harness-marketplace/
 
 - **Claude Code** Agent Teams 활성화 (`CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1`)
 
-## 벤치마크 (Phase 1 v2 — End-to-End, ISO/IEC 25010 + OWASP ASVS + DORA)
+## Honest Benchmarks (Phase 1 v2 — End-to-End, ISO/IEC 25010 + OWASP ASVS + DORA)
 
 `Plain Claude Code` vs `harness-marketplace` (v0.6.0 wizard 결과물) 의 end-to-end 평가. 국제 표준 준거 (ISO/IEC 25010, OWASP ASVS v4.0.3, OWASP Top 10 2021, CWE Top 25, DORA, HELM 원칙). 이전 Phase 0.5 단일-task 벤치마크 (commit `a455abe` 이전) 를 대체.
 
@@ -702,6 +741,21 @@ node scorer/aggregate-v2.js --stage slim                       # reports/slim-re
 | [v0.1.0](https://github.com/aiAgentDevelop/harness-marketplace-plugin/releases/tag/v0.1.0) | 최초 릴리스 |
 
 **v0.4.x 이하에서 업그레이드 하시나요?** v0.5.0은 hook 컨트랙트가 변경된 BREAKING 릴리스입니다. 플러그인을 업데이트한 뒤 각 프로젝트에서 `/harness-marketplace:upgrade`를 실행하세요 — v0.5.1부터 레거시 v1.x hook을 자동 감지하여 v2.x 형식으로 교체합니다(기존 hook은 타임스탬프 백업 디렉토리에 보존).
+
+## 버리는 디렉토리에서 먼저 써보세요
+
+`.claude/settings.json` 을 건드리고 실제 프로젝트에 CLAUDE.md 를 쓰는 위자드를 바로 설치하기 망설여지면, 빈 폴더에서 먼저 돌려보세요:
+
+```bash
+mkdir harness-try && cd harness-try
+/harness-marketplace:wizard
+# Manual 모드 선택, CI/CD 는 "no", Step D 에서 Sentry + PostHog 선택
+# → 생성된 .claude/skills/project-harness/ 트리를 직접 열어 확인
+```
+
+git 리포 없음, 의존성 없음, 실제 코드베이스에 부작용 없음. 다 보면 폴더째 삭제하면 끝입니다.
+
+---
 
 ## Acknowledgments
 
