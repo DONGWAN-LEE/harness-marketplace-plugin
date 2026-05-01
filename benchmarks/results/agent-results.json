@@ -1,0 +1,67 @@
+{
+  "rubric_version": "phase05-v2",
+  "scored_at": "2026-04-14",
+  "note": "KPI summary distilled from per-stage aggregates. Keep agent-results.json the canonical entry-point — full per-condition / per-axis data lives in <stage>-aggregated.json next to this file.",
+  "runs": {
+    "smoke": {
+      "n_cells": 1,
+      "cells_planned": null,
+      "cells_completed": null,
+      "cost_usd": null,
+      "budget_usd": null,
+      "aborted": null,
+      "completed_at": "2026-04-14T05:45:38.121Z",
+      "weighted_total": {
+        "bare_claude": 74.4,
+        "claude_md_only": null,
+        "full_harness": null
+      }
+    },
+    "pilot": {
+      "n_cells": 34,
+      "cells_planned": 102,
+      "cells_completed": 22,
+      "cost_usd": 3.15,
+      "budget_usd": 40,
+      "aborted": false,
+      "completed_at": "2026-04-14T06:24:10.395Z",
+      "weighted_total": {
+        "bare_claude": 71.1,
+        "claude_md_only": 76.8,
+        "full_harness": 74.9
+      }
+    },
+    "slim": {
+      "n_cells": 38,
+      "cells_planned": 12,
+      "cells_completed": 4,
+      "cost_usd": 13.7,
+      "budget_usd": 80,
+      "aborted": false,
+      "completed_at": "2026-04-14T09:33:39.740Z",
+      "weighted_total": {
+        "bare_claude": 83,
+        "claude_md_only": 88.1,
+        "full_harness": 86.8
+      }
+    }
+  },
+  "harness_lift": {
+    "stage_used": "slim",
+    "n_cells": 38,
+    "weighted_total": {
+      "bare_claude": 83,
+      "claude_md_only": 88.1,
+      "full_harness": 86.8
+    },
+    "delta_vs_bare": {
+      "claude_md_only": 5.1,
+      "full_harness": 3.8
+    }
+  },
+  "source_aggregates": [
+    "smoke-aggregated.json",
+    "pilot-aggregated.json",
+    "slim-aggregated.json"
+  ]
+}
