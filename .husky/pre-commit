@@ -1,0 +1,45 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh" 2>/dev/null || true
+
+# AI-readiness pre-commit gate.
+# Mirrors the threshold in .github/workflows/ai-readiness.yml so that broken
+# context refs (hallucinated paths in CLAUDE.md / SKILL.md / README.md / etc.)
+# are caught locally — before they hit the PR-side gate.
+#
+# Skip silently if Python or the scorer aren't available; the CI gate is the
+# canonical enforcer.
+
+if [ ! -f scripts/ai-readiness-score.py ]; then
+    exit 0
+fi
+
+if ! command -v python >/dev/null 2>&1 && ! command -v python3 >/dev/null 2>&1; then
+    exit 0
+fi
+
+PY=$(command -v python || command -v python3)
+
+PYTHONIOENCODING=utf-8 "$PY" scripts/ai-readiness-score.py . \
+    --json /tmp/ai-readiness-precommit.json >/dev/null 2>&1 || exit 0
+
+broken=$("$PY" -c "import json;print(json.load(open('/tmp/ai-readiness-precommit.json',encoding='utf-8'))['categories']['E']['evidence']['ref_broken'])" 2>/dev/null) || exit 0
+
+# Threshold matches CI workflow (.github/workflows/ai-readiness.yml).
+THRESHOLD=5
+
+if [ "$broken" -gt "$THRESHOLD" ]; then
+    cat <<MSG >&2
+[ai-readiness] commit blocked: hallucinated path refs = $broken (threshold $THRESHOLD)
+
+Likely cause: a generated-output path (something the wizard creates inside a
+user project, e.g. "app/api/health/route.ts" or ".claude/settings.json") was
+written as inline narrative instead of inside a fenced code block. Move such
+paths into a "\`\`\`text ... \`\`\`" block — this is the project convention so the
+AI-Readiness Gate (in CI and locally) does not flag them.
+
+Run "python scripts/ai-readiness-score.py ." for the full breakdown.
+MSG
+    exit 1
+fi
+
+exit 0

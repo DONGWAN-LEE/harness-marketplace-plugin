@@ -35,7 +35,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Notes
 
-- Repo's AI-Readiness score moved 45 → 57 (AI-Fragile, amber) after the **track A bundle** (CI gate, ref-fence, governance), then **57 → 87 (AI-Ready, green)** after the **C/D foundations bundle** (MEMORY.md + 5 ADRs + ARCHITECTURE.md + per-module Owns/Patterns/Deps/Why-marker standardization across all 8 modules). Cat C now scores 20/20 (Q1-Q5 all max). Hallucinated-path count remains 0. Remaining headroom: Cat B1 conciseness (README.md is 842 lines — compass-not-encyclopedia compression pending), Cat F husky pre-commit hook for path validation, Cat E4 prompt-test infra expansion.
+- Repo's AI-Readiness score moved 45 → 57 (AI-Fragile, amber) after the **track A bundle** (CI gate, ref-fence, governance), then **57 → 87 (AI-Ready, green)** after the **C/D foundations bundle** (MEMORY.md + 5 ADRs + ARCHITECTURE.md + per-module Owns/Patterns/Deps/Why-marker standardization across all 8 modules), then **87 → 91 (AI-Native, top tier)** after the **Phase 2 F/G refinement** (husky pre-commit gate + benchmarks/results/agent-results.json). All A-G categories now hit ≥ 87% of max except Cat B (13/20, README compass-not-encyclopedia compression pending) and Cat D (13/15, 2 pts gated on monorepo workspace file which doesn't apply here).
+
+### Added (Phase 2 — F/G refinement)
+
+- **`.husky/pre-commit`** (new) — local gate that runs `scripts/ai-readiness-score.py` and blocks the commit if hallucinated path refs exceed 5 (mirrors the CI threshold in `.github/workflows/ai-readiness.yml`). Skips silently if Python or the scorer aren't available so contributors without a local Python install aren't blocked. Provides actionable remediation hint about fenced `text` blocks for generated-output paths.
+- **`package.json`** (modified) — `devDependencies.husky` (`^9.1.0`) + `scripts.prepare` (`husky || true`) so `npm install` registers the hook on contributor machines. Skip-on-error keeps fresh clones from blowing up if husky binary isn't yet resolved.
+- **`benchmarks/results/agent-results.json`** (new) — distilled KPI summary across smoke / pilot / slim stages. Schema: per-run cells planned vs completed + cost vs budget + per-condition weighted totals (bare_claude / claude_md_only / full_harness). `harness_lift` block compares full_harness vs bare on the largest-n stage. Source aggregates remain canonical for full per-condition / per-axis data.
 
 ## [0.8.0] - 2026-04-17
 
