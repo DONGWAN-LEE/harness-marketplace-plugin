@@ -308,3 +308,40 @@ If still > 200:
 - [ ] Git commit completed (if user approved)
 - [ ] No auto-push performed
 </Final_Checklist>
+
+## Purpose
+
+이 skill 의 owns: 팀 공유 학습 (문제 → 원인 → 해법) 을 git-tracked 파일로 영구화하여, regression 패턴이 새 hook 룰로 자동 진화하는 self-learning loop 의 인간-입력 단계를 처리한다.
+
+## Common modification patterns
+
+- **새 학습 카테고리 추가 (예: security / performance / UX)** — 사용자 프로젝트의 카테고리 catalog 에 entry 추가 + INDEX.md template 에 카테고리 섹션 추가. 영향 파일 (사용자 프로젝트 안):
+
+  ```text
+  .harness/learnings/categories.yaml
+  ```
+- **자동 hook 제안 룰 갱신** — 본 skill 의 "propose hook rule" 단계 prompt 에 새 패턴 추가 → `templates/hooks/pattern-guard.sh.template` 의 hint 표 갱신.
+- **Self-learning log schema 변경** — 자동 누적 ledger 의 entry shape 갱신 → `skills/upgrade/SKILL.md` 의 보존 룰 (Phase 3.4) 와 함께 검토 (보존만 하고 schema 변환은 별도). 대상 파일은 사용자 프로젝트 안:
+
+  ```text
+  state/learning-log.yaml
+  ```
+
+**Why**: learn skill 은 "사람이 발견한 인사이트 → 자동 hook" 의 인간 ↔ 기계 interface — 양쪽이 깨지면 self-learning 이 멈춤.
+
+## Cross-module dependencies
+
+- 사용자 프로젝트 안 (이 plugin 레포에는 없음) — 팀 공유 store + 자동 누적 ledger:
+
+  ```text
+  .harness/learnings/        팀 공유 store (git-tracked)
+  state/learning-log.yaml    자동 누적 ledger (ADR-002 file-based state)
+  ```
+
+- `templates/hooks/pattern-guard.sh.template` — 학습된 룰이 주입되는 hook 본체.
+- `skills/upgrade/SKILL.md` Phase 3.4 — learning-log.yaml 보존 룰의 implementation.
+
+## See also
+
+- [`../../docs/adr/002-file-based-state.md`](../../docs/adr/002-file-based-state.md) — `learning-log.yaml` 의 위치 / 보존 룰의 결정 근거.
+- [`../../docs/ARCHITECTURE.md`](../../docs/ARCHITECTURE.md) — 3-layer 의 self-learning layer.

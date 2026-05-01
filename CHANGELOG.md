@@ -9,6 +9,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **`MEMORY.md`** (root, new) — repo-level tribal-knowledge externalization store. Lists active decisions (cross-linked to ADR series), common gotchas, conventions, cross-module dependency overview. Closes Cat C Q5 of the AI-Readiness rubric.
+- **`docs/adr/`** (new directory) — Architecture Decision Records. Five initial ADRs:
+  - [ADR-000](docs/adr/000-template.md) — ADR template
+  - [ADR-001](docs/adr/001-three-mode-wizard.md) — Wizard 3-mode entry (Deep Interview / Manual / Auto-Detect)
+  - [ADR-002](docs/adr/002-file-based-state.md) — File-based state, no external deps, no omc
+  - [ADR-003](docs/adr/003-korean-labels-direct.md) — Korean UI labels written directly (no AI translation)
+  - [ADR-004](docs/adr/004-issue-branch-pr-merge.md) — Issue → Branch → PR → Merge for all changes
+  - [ADR-005](docs/adr/005-version-three-place-sync.md) — Version sync across plugin.json / marketplace.json / package.json
+- **`docs/ARCHITECTURE.md`** (new) — system overview with three mermaid diagrams: high-level data flow (input → wizard → templates → harness output), three-layer architecture (Hook / CI/CD / Self-Learning) with self-learning feedback edges, module dependency graph (8 modules across skills / infra / resources / telemetry).
 - **`scripts/CLAUDE.md`** (new) — module-level context for the `scripts/` tree. Describes the role of `validate-harness.js` and `merge-hooks.js` as the merge-time integrity gate for wizard output, with quick commands and cross-refs to `skills/wizard/SKILL.md` / `tests/`. Closes the AI-Readiness Cat A coverage gap (8/8 modules now have agent context).
 - **`scripts/ai-readiness-score.py`** (new) — vendored copy of the AI-Readiness Cartography scorer (v2 rubric, 7 categories / 100 pts). Used by the new CI gate; runs stdlib-only, no deps.
 - **`.github/workflows/ai-readiness.yml`** (new) — AI-Readiness Gate. On every PR and push to `main`, runs the scorer and fails if hallucinated path references in agent-context docs (CLAUDE.md / SKILL.md / README.md) exceed 5. Uploads the JSON scorecard as an artifact (30-day retention).
@@ -26,7 +35,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Notes
 
-- Repo's AI-Readiness score moved 45 → 57 (AI-Fragile, amber) on the v2 rubric after this bundle. Hallucinated-path count went from 38 → 0. Remaining headroom: Cat C (tribal knowledge / MEMORY.md / ADR — 5/20), Cat D (ARCHITECTURE.md / mermaid dependency map — 2/15), Cat B1 (README.md is 842 lines — compass-not-encyclopedia compression pending).
+- Repo's AI-Readiness score moved 45 → 57 (AI-Fragile, amber) after the **track A bundle** (CI gate, ref-fence, governance), then **57 → 87 (AI-Ready, green)** after the **C/D foundations bundle** (MEMORY.md + 5 ADRs + ARCHITECTURE.md + per-module Owns/Patterns/Deps/Why-marker standardization across all 8 modules). Cat C now scores 20/20 (Q1-Q5 all max). Hallucinated-path count remains 0. Remaining headroom: Cat B1 conciseness (README.md is 842 lines — compass-not-encyclopedia compression pending), Cat F husky pre-commit hook for path validation, Cat E4 prompt-test infra expansion.
 
 ## [0.8.0] - 2026-04-17
 
