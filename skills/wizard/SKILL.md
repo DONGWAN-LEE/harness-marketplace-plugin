@@ -1849,3 +1849,17 @@ Why bad: No descriptions — user can't make informed choice.
 - [ ] All agents listed in config have corresponding .md files
 - [ ] All guides listed in config have corresponding .md files
 </Final_Checklist>
+
+## Cross-module dependencies
+
+- `data/agents.yaml`, `data/guides.yaml`, `data/observability-platforms.yaml`, `data/platforms.yaml`, `data/project-types.yaml` — wizard 의 질문 카탈로그 source. 옵션 추가 시 동기.
+- `templates/` — 출력 skeleton. Phase 5 의 file generation 단계가 소비.
+- `scripts/validate-harness.js` — 머지 직전 호출되는 검증 게이트.
+- `skills/upgrade/SKILL.md` — 동일 templates / data 를 재사용하는 형제 skill.
+
+**Note**: 새 옵션 추가 시 `_ko` 라벨 누락 금지 ([ADR-003](../../docs/adr/003-korean-labels-direct.md)). 검증은 `validate-harness.js` 의 yaml 스키마 룰에서 catch.
+
+## See also
+
+- [`../../docs/ARCHITECTURE.md`](../../docs/ARCHITECTURE.md) — 전체 데이터 플로우 다이어그램.
+- [`../../docs/adr/001-three-mode-wizard.md`](../../docs/adr/001-three-mode-wizard.md) — 3-mode entry 결정 근거.

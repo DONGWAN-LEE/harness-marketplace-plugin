@@ -93,3 +93,35 @@ node scorer/aggregate-v2.js --stage pilot --out reports/pilot-report.md
 | Full (+A3 all sprints) | ~531 | ~40h | ~$250 (ceiling $350) |
 
 See `PROTOCOL-v2.md` for decision rules on Pilot → Slim → Full escalation.
+
+## Purpose
+
+이 디렉토리의 owns: harness-marketplace plugin 자체의 효과를 정량 측정. harness 적용군 vs 미적용군의 task 통과율 / latency / 토큰 사용량을 비교해 plugin 의 ROI 를 수치화한다.
+
+## Common modification patterns
+
+- **새 평가 시나리오 추가** — `seeds/<scenario>.json` 신설 → `runner/render-seeds.js` 의 매핑 갱신 → `scorer/aggregate-v2.js` 가 새 시나리오를 집계에 포함.
+- **새 metric 추가 (예: 코드 변경량 LOC)** — `scorer/judge-batch.js` 에 측정 로직 → `aggregate-v2.js` 의 통계 함수에 합치.
+- **Reference project 추가** — `reference-projects/<name>/` 신설 → 각 reference 마다 `claude_md_only` / `full_harness` 두 변형 보유.
+
+**Why:** benchmarks 는 plugin 의 변화가 실제로 사용자에게 효과가 있는지 검증하는 ground-truth — 측정 인프라 자체가 stale 하면 잘못된 결론을 confidence 있게 보고. **반드시** 변경 시 회귀 측정.
+
+**Note:** `results/raw/` 는 `.gitignore` 처리 — 매 run 마다 GB 단위 산출물. 다음 산출물만 commit:
+
+```text
+results/aggregated.json
+results/scored/*.json
+phase05-report.md
+```
+
+## Cross-module dependencies
+
+- `../skills/wizard/SKILL.md` — 측정 대상의 source. 이 skill 의 변경이 benchmark 결과에 영향.
+- `../skills/upgrade/SKILL.md` — 측정 대상 (variant 비교).
+- `../scripts/validate-harness.js` — reference-projects/ 의 generated harness 가 schema 에 맞는지 사전 검증.
+- `../templates/` — reference-projects 의 full_harness variant 가 사용하는 source.
+
+## See also
+
+- [`../docs/ARCHITECTURE.md`](../docs/ARCHITECTURE.md) — 모듈 의존 그래프 (benchmarks 가 plugin 핵심을 측정하는 위치).
+- `PROTOCOL-v2.md` (이 디렉토리 내부) — 평가 protocol 정의.

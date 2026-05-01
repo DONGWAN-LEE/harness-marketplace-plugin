@@ -438,3 +438,28 @@ If validation fails or user requests rollback:
 - Use `AskUserQuestion` for upgrade confirmation and rollback decisions
 - Use `Agent(subagent_type="Explore")` to verify file structure
 </Tool_Usage>
+
+## Purpose
+
+이 skill 의 owns: 사용자 프로젝트의 기존 `project-harness` 를 최신 marketplace 템플릿으로 갱신하면서 사용자 작성 데이터 (`project-config.yaml`, hook Custom Rules, `state/` 의 self-learning 이력) 를 보존한다.
+
+## Common modification patterns
+
+- **새 template 파일 추가** — `templates/` 에 신규 파일 → 본 skill 의 Phase 3 overwrite 룰에 매핑 추가 → `scripts/validate-harness.js` 의 `REQUIRED_FILES` 동기.
+- **Custom Rules 마커 위치 변경** — 호환성 유지 위해 기존 마커 (`═══ CUSTOM RULES BELOW`) 와 새 마커 양쪽을 한동안 인식. **반드시** backward-compat 기간을 ADR 로 기록.
+- **Hook contract 변경 (v1.x → v2.x 같은)** — 본 skill 의 Phase 1.5 (legacy detection) 갱신 + backup-as-recovery path 보존 + CHANGELOG `BREAKING` 명시.
+
+**Why** patterns 섹션이 별도로 필요한가: upgrade 는 사용자 데이터를 잃을 risk 가 가장 큰 skill — 변경 시 표준 시퀀스를 따르면 회귀 차단.
+
+## Cross-module dependencies
+
+- `templates/` — 갱신 source. wizard 와 공유.
+- `data/agents.yaml`, `data/guides.yaml` — 옵션 카탈로그. wizard 와 공유.
+- `scripts/validate-harness.js` — Phase 5 머지-게이트.
+- `skills/wizard/SKILL.md` — 형제 skill. 산출물 schema 가 일관되어야 upgrade 가 양쪽을 모두 지원.
+
+## See also
+
+- [`../../docs/ARCHITECTURE.md`](../../docs/ARCHITECTURE.md) — 모듈 의존 그래프.
+- [`../../docs/adr/002-file-based-state.md`](../../docs/adr/002-file-based-state.md) — self-learning log 보존 룰의 결정 근거.
+- [`../../UPGRADE.md`](../../UPGRADE.md) — 사용자용 upgrade flow.

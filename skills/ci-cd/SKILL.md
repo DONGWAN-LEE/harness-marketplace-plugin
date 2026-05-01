@@ -231,3 +231,22 @@ Store as: ci_cd.ai_review.block_on_critical and ci_cd.ai_review.auto_approve
 - [ ] Validation passed
 - [ ] User confirmed
 </Final_Checklist>
+
+## Common modification patterns
+
+- **새 CI 플랫폼 지원 추가 (예: CircleCI)** — `templates/ci-cd/<platform>/` 디렉토리 신설 → `data/ci-cd-pipelines.yaml` 의 `ci_cd_platform` 카탈로그에 entry 추가 → 본 skill 의 platform 선택 분기에 새 케이스 추가 → `scripts/validate-harness.js` 의 `validateCiCd` 함수에 새 플랫폼 검증 룰 추가.
+- **새 워크플로우 추가 (예: nightly e2e)** — `templates/ci-cd/<platform>/<name>.yml.template` 신설 → 본 skill 의 pipeline 선택 분기에 추가 → README + README-ko 양쪽에 사용 예시.
+
+**Why:** CI/CD 변경은 사용자 deploy 파이프라인을 직접 건드림 — `--reconfigure` 가 기존 user customization 을 덮을 risk 있음. **반드시** 변경 시 위 표준을 따라야 회귀 차단.
+
+## Cross-module dependencies
+
+- `templates/ci-cd/` — 워크플로우 source.
+- `data/ci-cd-pipelines.yaml` — `ci_cd_platform` 카탈로그.
+- `scripts/validate-harness.js` `validateCiCd` — 머지-게이트.
+- `skills/wizard/SKILL.md` Phase 4 Step E — wizard 가 ci-cd 를 inline 으로 호출 (defer 옵션 시 본 skill 로 위임).
+
+## See also
+
+- [`../../docs/ARCHITECTURE.md`](../../docs/ARCHITECTURE.md) — 모듈 의존 그래프.
+- [`../../templates/ci-cd/`](../../templates/ci-cd/) — 워크플로우 template 트리.
