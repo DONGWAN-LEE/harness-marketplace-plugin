@@ -47,8 +47,13 @@ harness-marketplace is a Claude Code plugin that generates project-specific deve
 
 ### State Management
 
-All state is file-based under `state/` directory. No external dependencies (no omc).
-- `state/pipeline-state.json` — Pipeline execution state
-- `state/handoffs/` — Phase handoff files
-- `state/results/` — Phase result files
-- `state/learning-log.yaml` — Self-learning history
+All runtime state of the **generated** harness is file-based under `state/` (no external dependencies, no omc). Layout:
+
+```text
+state/pipeline-state.json    Pipeline execution state
+state/handoffs/              Phase handoff files
+state/results/               Phase result files
+state/learning-log.yaml      Self-learning history
+```
+
+(These paths live inside the user's project after wizard completion — they do not exist in this plugin repo itself.)

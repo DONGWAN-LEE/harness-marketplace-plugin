@@ -25,28 +25,39 @@ Preserves the project's `project-config.yaml` (wizard answers, agents, guides) w
 
 ## Phase 0: Detect Existing Harness
 
-1. **Check for project-harness**:
-   - Look for `.claude/skills/project-harness/project-config.yaml`
-   - If not found → error: "No existing project-harness found. Run `/harness-marketplace:wizard` first."
+1. **Check for project-harness** — verify the harness installation exists at the expected location (under user's project root):
+
+   ```text
+   .claude/skills/project-harness/project-config.yaml
+   ```
+
+   If not found → error: "No existing project-harness found. Run `/harness-marketplace:wizard` first."
 
 2. **Read existing config**:
    - Parse `project-config.yaml`
    - Extract: version, generated_by, flags, agents, guides, run_options
    - Store as `existing_config`
 
-3. **Compare versions (local + remote)**:
-   a. Read local plugin version from plugin metadata (`${CLAUDE_PLUGIN_ROOT}/.claude-plugin/plugin.json`)
-   b. Fetch latest version from remote (skip if `--offline`):
-      - Determine repo URL:
-        1. Read `~/.claude/plugins/installed_plugins.json`
-        2. Find `harness-marketplace@harness-marketplace` entry
-        3. Read `~/.claude/plugins/known_marketplaces.json` for the marketplace repo URL
-        4. Fallback: use `https://github.com/aiAgentDevelop/harness-marketplace-plugin.git`
-      - Bash: `git ls-remote <repo-url> HEAD` → verify remote is reachable
-      - WebFetch: `https://raw.githubusercontent.com/<owner>/<repo>/main/.claude-plugin/plugin.json`
-      - Parse `version` field from fetched JSON → `remote_version`
-      - If WebFetch fails → set `remote_version = null`, fall back to local
-   c. Determine `upgrade_version` = max(remote_version, local_plugin_version)
+3. **Compare versions (local + remote)**.
+
+   Resolution sources (each is an external runtime path under the user's home, not a file inside this repo):
+
+   ```text
+   ${CLAUDE_PLUGIN_ROOT}/.claude-plugin/plugin.json   (local plugin metadata)
+   ~/.claude/plugins/installed_plugins.json           (find harness-marketplace@harness-marketplace entry)
+   ~/.claude/plugins/known_marketplaces.json          (resolve marketplace repo URL)
+   https://raw.githubusercontent.com/<owner>/<repo>/main/.claude-plugin/plugin.json   (remote head)
+   ```
+
+   Steps:
+
+   a. Read `version` from the local plugin metadata above.
+   b. Fetch latest from remote (skip if `--offline`):
+      - Determine repo URL via the resolution chain above (fallback: `https://github.com/aiAgentDevelop/harness-marketplace-plugin.git`).
+      - Bash: `git ls-remote <repo-url> HEAD` → verify remote is reachable.
+      - WebFetch the remote metadata URL → parse `version` → `remote_version`.
+      - If WebFetch fails → set `remote_version = null`, fall back to local.
+   c. Determine `upgrade_version` = max(remote_version, local_plugin_version).
    d. Compare `upgrade_version` vs `existing_config.generated_by`:
       - If upgrade_version > existing → proceed: "Upgrading: {existing} → {upgrade_version}"
       - If same → warn: "Already at latest version. Continue anyway?"
@@ -76,31 +87,35 @@ Skip this phase if `template_source` is local or `--offline` is set.
 
 If `--preview` flag or user wants to see changes first:
 
-1. **List files that will be replaced** (template-based):
-   - `SKILL.md` (orchestrator)
-   - `plan/SKILL.md`
-   - `debug/SKILL.md` (new in v0.4.0, created if missing)
-   - `implement/SKILL.md`
-   - `visual-qa/SKILL.md` (if has_ui)
-   - `verify/SKILL.md`
-   - `references/classification.md`
-   - `references/schemas.md`
-   - `hooks/*.sh` — Generated Rules section only (Custom Rules section preserved).
-     **Exception**: if Phase 1.5 detects legacy v1.x hooks, the entire
-     `hooks/` directory is replaced (the Phase 2 backup is the recovery path).
-   - `hooks-config.json` (regenerated from template; legacy v1.x command lines
-     containing `$CLAUDE_TOOL_INPUT_*` are explicitly removed — those env vars
-     are not set under Claude Code v2.x and were causing silent no-ops)
-   - `hooks/_parse.sh`, `hooks/_log.sh` (added if missing — required v2.x helpers)
+1. **List files that will be replaced** (template-based, paths under generated `project-harness/`):
 
-2. **List files that will be preserved**:
-   - `project-config.yaml`
-   - `agents/*.md` (unless user requests regeneration)
-   - `guides/*.md` (unless user requests regeneration)
-   - `references/options.md`
-   - `state/` (runtime data, including `learning-log.yaml`)
-   - `hooks/*.sh` — Custom Rules section (below the `═══ CUSTOM RULES` marker)
-   - `.github/workflows/*.yml` (CI/CD workflows, unless user requests regeneration)
+   ```text
+   SKILL.md                          (orchestrator)
+   plan/SKILL.md
+   debug/SKILL.md                    (new in v0.4.0, created if missing)
+   implement/SKILL.md
+   visual-qa/SKILL.md                (if has_ui)
+   verify/SKILL.md
+   references/classification.md
+   references/schemas.md
+   hooks/*.sh                        (Generated Rules section only — Custom Rules preserved)
+   hooks-config.json                 (regenerated; legacy v1.x lines using $CLAUDE_TOOL_INPUT_* removed)
+   hooks/_parse.sh, hooks/_log.sh    (added if missing — required v2.x helpers)
+   ```
+
+   **Exception**: if Phase 1.5 detects legacy v1.x hooks, the entire `hooks/` directory is replaced (Phase 2 backup is the recovery path). `$CLAUDE_TOOL_INPUT_*` env vars are not set under Claude Code v2.x and were causing silent no-ops.
+
+2. **List files that will be preserved** (paths under generated `project-harness/`):
+
+   ```text
+   project-config.yaml
+   agents/*.md                       (unless user requests regeneration)
+   guides/*.md                       (unless user requests regeneration)
+   references/options.md
+   state/                            (runtime data, including learning-log.yaml)
+   hooks/*.sh                        (Custom Rules section below ═══ CUSTOM RULES marker)
+   .github/workflows/*.yml           (CI/CD workflows, unless user requests regeneration)
+   ```
 
 3. **Show upgrade summary** via AskUserQuestion:
    - Files to replace (count + list)
@@ -319,15 +334,18 @@ enclosed block accordingly):
    신규 reference/skill 파일들은 자유롭게 overwrite 해도 안전 (사용자 편집 영역 없음,
    커스텀 지침은 CLAUDE.md § Custom Rules 에 저장). 단 조건부 activation 은 기존 설정 보존.
 
-   **Always overwrite (no Custom Rules)**:
-   - `references/progress-format.md` ← templates/progress-format.md
-   - `references/ui-conventions.md` ← templates/ui-conventions.md
-   - `references/handoff-templates.md` ← templates/handoff-templates.md
-   - `references/schemas.md` ← templates/schemas.md
-   - `references/guide-injection.md` ← templates/guide-injection.md
-   - `references/monitor-mode.md` ← templates/monitor-mode.md
-   - `references/parallel-execution.md` ← templates/parallel-execution.md
-   - `codebase-analysis/SKILL.md` ← templates/codebase-analysis.md
+   **Always overwrite (no Custom Rules)** — destination ← source mapping:
+
+   ```text
+   references/progress-format.md     ← templates/progress-format.md
+   references/ui-conventions.md      ← templates/ui-conventions.md
+   references/handoff-templates.md   ← templates/handoff-templates.md
+   references/schemas.md             ← templates/schemas.md
+   references/guide-injection.md     ← templates/guide-injection.md
+   references/monitor-mode.md        ← templates/monitor-mode.md
+   references/parallel-execution.md  ← templates/parallel-execution.md
+   codebase-analysis/SKILL.md        ← templates/codebase-analysis.md
+   ```
 
    **Conditional (activation flag 재평가 후 처리)**:
    ```
@@ -347,11 +365,14 @@ enclosed block accordingly):
      → remove if exists
    ```
 
-   **Agent/guide entries for H1 (supabase-security-gate, supabase-security)**:
-   - `agents/supabase-security-gate.md` and `guides/supabase-security.md`:
-     재생성 건너뜀 (사용자가 Custom Rules 로 편집했을 가능성). 대신 AskUserQuestion:
-     "agents/supabase-security-gate.md 를 data/agents.yaml 최신 버전으로 재생성할까요?"
-     [Yes (Custom Rules 손실)] / [No (현재 유지)] / [diff 먼저 보기]
+   **Agent/guide entries for H1 (supabase-security-gate, supabase-security)** — 재생성 건너뜀 (사용자가 Custom Rules 로 편집했을 가능성). 대신 AskUserQuestion: "agent/guide 를 data/agents.yaml 최신 버전으로 재생성할까요?" 옵션은 [Yes (Custom Rules 손실)] / [No (현재 유지)] / [diff 먼저 보기].
+
+   영향 받는 파일 (생성된 harness 내부):
+
+   ```text
+   agents/supabase-security-gate.md
+   guides/supabase-security.md
+   ```
 
    Log: `option_z_upgrade = "done"` with per-file action record.
 
@@ -361,9 +382,13 @@ enclosed block accordingly):
    - If new pipeline types available, offer to add them
    - If ci_cd.platform == "deferred": inform user "CI/CD was deferred. Run /harness-marketplace:ci-cd to configure."
 
-4. **Preserve self-learning data**:
-   - Never overwrite `state/learning-log.yaml`
-   - Custom Rules added by self-learning are preserved (Step 2 above)
+4. **Preserve self-learning data** — never touch the runtime state under generated harness:
+
+   ```text
+   state/learning-log.yaml          (self-learning history, never overwritten)
+   ```
+
+   Custom Rules added by self-learning are preserved (Step 2 above).
 
 5. **Update version** in project-config.yaml:
    - Update `generated_by` to current marketplace version

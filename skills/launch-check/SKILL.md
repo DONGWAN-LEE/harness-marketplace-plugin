@@ -302,9 +302,19 @@ pipeline until the BLOCK items are resolved.
 
 | Section | Tracked as | Expected |
 |---|---|---|
-| 3 — Legal / Compliance | `data/guides.yaml` legal-compliance domain + `license-auditor`, `privacy-auditor` agents | next release after observability lands |
-| 4 — Testing Completeness | `templates/e2e-patterns.md`, `templates/contract-test-patterns.md` | follow-up P1 |
-| 5 — Runbooks & Playbooks | `templates/playbooks/onboarding.md`, `incident-response.md`, `secret-rotation.md` | follow-up P1 |
+| 3 — Legal / Compliance | `data/guides.yaml` legal-compliance domain + license/privacy auditor agents | next release after observability lands |
+| 4 — Testing Completeness | testing template files (see Planned files below) | follow-up P1 |
+| 5 — Runbooks & Playbooks | playbook template files (see Planned files below) | follow-up P1 |
+
+Planned (not yet present in this repo — paths are the future locations):
+
+```text
+templates/e2e-patterns.md
+templates/contract-test-patterns.md
+templates/playbooks/onboarding.md
+templates/playbooks/incident-response.md
+templates/playbooks/secret-rotation.md
+```
 
 Until these ship, the three placeholder sections stay as WARN, and `launch-check`
 remains actionable through Sections 1 and 2.
