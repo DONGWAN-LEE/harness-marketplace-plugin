@@ -296,3 +296,34 @@ STOP execution. Do not proceed further.
 - [ ] PR was NOT merged — URL presented to user
 - [ ] No auto-push was performed without approval
 </Final_Checklist>
+
+## Purpose
+
+이 skill 의 owns: 사용자 코드 변경을 GitHub workflow (Issue → Branch → Commit → PR) 로 감싸 audit trail 을 보장한다. PR merge 는 절대 자동 수행하지 않는다.
+
+## Common modification patterns
+
+- **새 commit 메시지 컨벤션 (Conventional Commits 등)** — 본 skill 의 commit 단계 prompt 에 컨벤션 명시 + lint 룰 추가.
+- **PR template 변경** — `.github/` 안의 PR template 갱신 + 본 skill 의 PR body 생성 단계에서 template 의 항목을 채우도록 prompt 수정. 영향 파일:
+
+  ```text
+  .github/pull_request_template.md
+  ```
+- **Issue 자동화 (예: label 자동 부여)** — `gh issue create --label` 옵션 추가 + label 카탈로그 정의.
+
+**Why**: gh skill 은 사용자 의도를 PR 의 audit trail 로 영구화 — commit / push / PR 생성의 모든 단계가 idempotent + reversible 해야 함.
+
+## Cross-module dependencies
+
+- PR template + CODEOWNERS — review 자동 요청 + PR body source. 위치:
+
+  ```text
+  .github/pull_request_template.md
+  .github/CODEOWNERS
+  ```
+- `skills/wizard/SKILL.md` Phase 7 — wizard 완료 후 사용자 commit 시 본 skill 로 위임 가능.
+
+## See also
+
+- [`../../docs/adr/004-issue-branch-pr-merge.md`](../../docs/adr/004-issue-branch-pr-merge.md) — Issue → Branch → PR → Merge 룰의 결정 근거.
+- [`../../docs/ARCHITECTURE.md`](../../docs/ARCHITECTURE.md) — 모듈 의존 그래프.

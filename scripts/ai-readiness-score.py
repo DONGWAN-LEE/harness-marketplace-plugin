@@ -55,11 +55,14 @@ FIXTURE_PATH_MARKERS = (
 )
 
 # Heuristic regex.
-# Trailing (?![A-Za-z0-9]) anchor prevents truncation when an extension is the
-# prefix of a longer one — without it, "plugin.json" matched as "plugin.js".
+# - Trailing (?![A-Za-z0-9]) anchor prevents truncation when an extension is the
+#   prefix of a longer one — without it, "plugin.json" matched as "plugin.js".
+# - Leading \.{1,2}/ admits both "./X" and "../X" relative refs. Without it,
+#   "../FILE.md" was captured as "./FILE.md" (one dot lost) which then failed
+#   to resolve against the parent directory.
 RE_PATH_REF = re.compile(
     r"(?<![A-Za-z0-9_/])"
-    r"((?:\./|[A-Za-z0-9_]+/)[A-Za-z0-9_./-]+\.(?:py|ts|tsx|js|jsx|md|sql|json|yaml|yml|toml|html|css|sh|go|rs|java|kt|rb|php))"
+    r"((?:\.{1,2}/|[A-Za-z0-9_]+/)[A-Za-z0-9_./-]+\.(?:py|ts|tsx|js|jsx|md|sql|json|yaml|yml|toml|html|css|sh|go|rs|java|kt|rb|php))"
     r"(?![A-Za-z0-9])"
 )
 RE_FENCED_BLOCK = re.compile(r"```[\s\S]*?```")

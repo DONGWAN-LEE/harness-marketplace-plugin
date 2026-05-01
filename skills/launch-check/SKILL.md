@@ -318,3 +318,18 @@ templates/playbooks/secret-rotation.md
 
 Until these ship, the three placeholder sections stay as WARN, and `launch-check`
 remains actionable through Sections 1 and 2.
+
+## Cross-module dependencies
+
+- `data/agents.yaml`, `data/guides.yaml` — observability / launch 관련 agent 카탈로그 source.
+- `data/observability-platforms.yaml` — Section 2.1 의 observability 검증 룰 source.
+- `templates/integrations/` — Section 2.1 이 검증하는 generated 파일의 template.
+- `skills/wizard/SKILL.md` — wizard 가 launch-check 를 활성화 (`run_options` 에 의해).
+- `scripts/validate-harness.js` — 본 skill 이 의존하는 harness 무결성 검증.
+
+**Note**: Section 3-5 (Legal / Testing / Playbooks) 은 placeholder 상태. 위 Roadmap 표의 "Planned" 파일이 채워질 때까지 WARN 으로 보고.
+
+## See also
+
+- [`../../docs/ARCHITECTURE.md`](../../docs/ARCHITECTURE.md) — 모듈 의존 그래프.
+- [`../../data/observability-platforms.yaml`](../../data/observability-platforms.yaml) — Section 2.1 의 검증 source.
