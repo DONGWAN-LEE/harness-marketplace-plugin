@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **`docs/AI-READINESS.md`** (new) — single-page work log + backlog covering the AI-Readiness rubric infrastructure landed in v0.9.0 (#53/#55/#56/#57). Captures the journey (raw 26 → metat-tool-aware 45 → 57 → 87 → 91 AI-Native), per-category sub-scores breakdown, ROI-ranked backlog (B-readability / scorer enhancement / one-shot follow-ups), and reproduction commands (local scorer + husky pre-commit + CI gate). New contributors and agents can recover full context in 30 seconds.
+
 ## [0.9.0] - 2026-05-01
 
 ### Highlights
