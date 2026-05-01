@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.9.0] - 2026-05-01
+
+### Highlights
+
+AI-Readiness 인프라 신설 — 레포 자체가 v2 100점 루브릭 (7 카테고리: Navigation / Context Quality / Tribal Knowledge / Dependency Mapping / Verification Gates / Freshness / Agent Outcomes) 으로 측정 가능해지고, 점수가 **45 → 91 (AI-Native, top tier)** 로 상승. 환각 path 0/84. 회귀 방지: PR 단위 CI gate + 로컬 husky pre-commit gate 가 모든 변경에 대해 broken context refs 임계 (5 이내) 강제. 동시에 tribal knowledge 가 외부화 (MEMORY.md + 5 ADRs + ARCHITECTURE.md mermaid 3종) 되어 신규 컨트리뷰터·에이전트 모두 의사결정 근거를 즉시 참조 가능.
+
 ### Added
 
 - **`MEMORY.md`** (root, new) — repo-level tribal-knowledge externalization store. Lists active decisions (cross-linked to ADR series), common gotchas, conventions, cross-module dependency overview. Closes Cat C Q5 of the AI-Readiness rubric.

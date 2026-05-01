@@ -9,7 +9,7 @@
     {
       "name": "harness-marketplace",
       "description": "Interactive scaffolding wizard → project-config.yaml + plan/implement/verify skills (parallel sub-agent orchestration) + agents + guides + CLAUDE.md + hooks + CI/CD + observability + launch-check gate. Hybrid generation: template structure + AI-generated specialists.",
-      "version": "0.8.0",
+      "version": "0.9.0",
       "source": "./",
       "category": "productivity",
       "tags": [
