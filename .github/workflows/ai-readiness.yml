@@ -1,0 +1,55 @@
+name: AI-Readiness Gate
+
+# Validates that all path references in agent-context docs (CLAUDE.md, AGENTS.md,
+# SKILL.md, README.md) resolve to real files in the repo. Catches stale/halluci-
+# nated paths before they merge — guards Claude Code agents against following
+# dead refs into the wizard / upgrade / launch-check flows.
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Run AI-readiness scorer
+        run: |
+          python scripts/ai-readiness-score.py . \
+            --json /tmp/ai-readiness-score.json
+
+      - name: Gate on broken refs
+        run: |
+          python <<'PY'
+          import json, sys
+          d = json.load(open('/tmp/ai-readiness-score.json'))
+          broken = d['categories']['E']['evidence']['ref_broken']
+          total_refs = d['categories']['E']['evidence']['ref_total']
+          score = d['total']
+          grade = d['grade']
+          print(f"Score: {score}/100 · Grade: {grade}")
+          print(f"Ref accuracy: {total_refs - broken}/{total_refs} (broken: {broken})")
+          # Threshold: allow up to 5 broken refs (gives room for new generated-output paths
+          # before authors fence them; bump down to 0 once team is in the habit).
+          if broken > 5:
+              print(f"::error::Too many hallucinated paths: {broken} > 5 threshold")
+              sys.exit(1)
+          PY
+
+      - name: Upload score artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ai-readiness-score
+          path: /tmp/ai-readiness-score.json
+          retention-days: 30

@@ -281,7 +281,13 @@ AI 추천:
 /project-harness interview
 ```
 
-**다중 라운드 딥 서비스 인터뷰**를 실행하여 종합 PRD (`.claude/skills/project-harness/prd/service-prd.md`)를 생성합니다. 인터뷰는 WebSearch 딥 리서치를 통해 도메인 전문가 에이전트를 생성하고, 개발 팀 구성을 정의하며, 10개 차원에서 구현 명확도 %를 추적합니다.
+**다중 라운드 딥 서비스 인터뷰**를 실행하여 생성된 harness 안에 종합 PRD 를 만듭니다. 산출 파일 위치 (위자드 실행 후 사용자 프로젝트 안에 생성 — 이 플러그인 레포에는 없음):
+
+```text
+.claude/skills/project-harness/prd/service-prd.md
+```
+
+인터뷰는 WebSearch 딥 리서치를 통해 도메인 전문가 에이전트를 생성하고, 개발 팀 구성을 정의하며, 10개 차원에서 구현 명확도 %를 추적합니다.
 
 **동작 방식:**
 
@@ -336,7 +342,13 @@ cd <your-project>
 
 업그레이드 스킬은 GitHub에서 최신 템플릿을 자동으로 가져오며 (v0.4.0+), `project-config.yaml`, hook의 Custom Rules, `learning-log.yaml`을 보존하고, `.claude/backups/project-harness-{timestamp}/`에 타임스탬프 백업을 남깁니다. `--offline`으로 로컬 플러그인 캐시 강제 사용, `--preview`로 실행 없이 계획만 확인, `--backup-only`로 업그레이드 없이 백업만.
 
-**v1.x legacy hook 자동 마이그레이션** (v0.5.1+): 프로젝트가 구버전 v1.x hook 컨트랙트로 생성되어 Claude Code v2.x에서 silent no-op 상태([#16](https://github.com/aiAgentDevelop/harness-marketplace-plugin/issues/16))임을 감지하면, `hooks/` 디렉토리 전체를 v2.x 포맷으로 교체합니다. 기존 hook은 백업 디렉토리에 보존되며, Custom Rules가 있었다면 수동 복사 필요. 업그레이드가 `.claude/settings.json`의 hook 엔트리 교체도 제안할 텐데 — **반드시 수락하세요**, 그러지 않으면 Claude Code가 새 hook을 등록하지 않습니다.
+**v1.x legacy hook 자동 마이그레이션** (v0.5.1+): 프로젝트가 구버전 v1.x hook 컨트랙트로 생성되어 Claude Code v2.x에서 silent no-op 상태([#16](https://github.com/aiAgentDevelop/harness-marketplace-plugin/issues/16))임을 감지하면, `hooks/` 디렉토리 전체를 v2.x 포맷으로 교체합니다. 기존 hook은 백업 디렉토리에 보존되며, Custom Rules가 있었다면 수동 복사 필요. 업그레이드가 다음 위치의 hook 엔트리 교체도 제안할 텐데:
+
+```text
+.claude/settings.json    (사용자 프로젝트 루트, 이 플러그인 레포 아님)
+```
+
+**반드시 수락하세요**, 그러지 않으면 Claude Code가 새 hook 을 등록하지 않습니다.
 
 **업그레이드 후 검증**:
 
@@ -449,11 +461,22 @@ wizard 완료 시 **프로젝트 루트에 `CLAUDE.md` 가 자동 생성**되어
 
 ### 생성되는 파일
 
-`integration_template_path`가 설정된 플랫폼(현재 Sentry + PostHog)을 선택하면 wizard가 보일러플레이트를 프로젝트에 바로 써넣습니다:
+`integration_template_path`가 설정된 플랫폼(현재 Sentry + PostHog)을 선택하면 wizard가 보일러플레이트를 프로젝트에 바로 써넣습니다. 생성되는 파일 (위자드 실행 후 사용자 프로젝트 안 — 이 플러그인 레포에는 없음):
 
-- **Sentry + Next.js** → `instrumentation.ts`, `app/error-boundary.tsx`, `app/api/health/route.ts`
-- **Sentry + Node 백엔드** → `src/instrument.ts`, 헬스체크 엔드포인트
-- **PostHog + Next.js** → `app/providers/posthog-provider.tsx`, `docs/events-catalog.md`
+```text
+Sentry + Next.js
+  instrumentation.ts
+  app/error-boundary.tsx
+  app/api/health/route.ts
+
+Sentry + Node 백엔드
+  src/instrument.ts
+  (헬스체크 엔드포인트)
+
+PostHog + Next.js
+  app/providers/posthog-provider.tsx
+  docs/events-catalog.md
+```
 
 모든 생성 파일은 `═══ CUSTOM RULES BELOW (preserved on upgrade) ═══` 마커로 끝나므로 팀의 수정 사항은 `/harness-marketplace:upgrade` 를 거쳐도 보존됩니다.
 
@@ -793,7 +816,11 @@ node scorer/aggregate-v2.js --stage slim                       # reports/slim-re
 
 ## 버리는 디렉토리에서 먼저 써보세요
 
-`.claude/settings.json` 을 건드리고 실제 프로젝트에 CLAUDE.md 를 쓰는 위자드를 바로 설치하기 망설여지면, 빈 폴더에서 먼저 돌려보세요:
+프로젝트의 로컬 설정 파일을 건드리고 실제 프로젝트에 CLAUDE.md 를 쓰는 위자드를 바로 설치하기 망설여지면, 빈 폴더에서 먼저 돌려보세요. 영향 파일:
+
+```text
+.claude/settings.json
+```
 
 ```bash
 mkdir harness-try && cd harness-try

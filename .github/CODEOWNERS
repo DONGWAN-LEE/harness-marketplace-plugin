@@ -1,0 +1,10 @@
+# Default owner for all paths.
+* @aiAgentDevelop
+
+# Specific high-risk areas — explicit ownership for review traceability.
+/scripts/                @aiAgentDevelop
+/skills/                 @aiAgentDevelop
+/templates/              @aiAgentDevelop
+/data/                   @aiAgentDevelop
+/.github/                @aiAgentDevelop
+/.claude-plugin/         @aiAgentDevelop

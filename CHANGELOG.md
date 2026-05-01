@@ -7,10 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **`scripts/CLAUDE.md`** (new) — module-level context for the `scripts/` tree. Describes the role of `validate-harness.js` and `merge-hooks.js` as the merge-time integrity gate for wizard output, with quick commands and cross-refs to `skills/wizard/SKILL.md` / `tests/`. Closes the AI-Readiness Cat A coverage gap (8/8 modules now have agent context).
+- **`scripts/ai-readiness-score.py`** (new) — vendored copy of the AI-Readiness Cartography scorer (v2 rubric, 7 categories / 100 pts). Used by the new CI gate; runs stdlib-only, no deps.
+- **`.github/workflows/ai-readiness.yml`** (new) — AI-Readiness Gate. On every PR and push to `main`, runs the scorer and fails if hallucinated path references in agent-context docs (CLAUDE.md / SKILL.md / README.md) exceed 5. Uploads the JSON scorecard as an artifact (30-day retention).
+- **`.github/CODEOWNERS`** (new) — explicit ownership for `scripts/`, `skills/`, `templates/`, `data/`, `.github/`, `.claude-plugin/`. Wires up GitHub auto-review-request and unblocks E2 (independent critic infra) on the AI-Readiness rubric.
+- **`.github/pull_request_template.md`** (new) — PR scaffold with Summary / Category / Impact / Verification sections. Embeds the project rules as checklist items: README + README-ko sync, CHANGELOG update, version-three-place sync (when applicable), and the "fence generated-output paths" convention so the AI-Readiness Gate doesn't false-flag them.
+
 ### Changed
 
+- **`CLAUDE.md`** (root) — `### State Management` section reorganized: the `state/pipeline-state.json` / `state/handoffs/` / `state/results/` / `state/learning-log.yaml` listing moved into a fenced `text` block with an explicit note that these paths live inside the user's project after wizard completion, not in this plugin repo. Removes a long-standing source of false-positive hallucinated-path flags.
+- **`skills/upgrade/SKILL.md`** — three path-heavy sections (Phase 0 harness check, Phase 0 version-compare resolution chain, Phase 1 replace/preserve lists, Phase 2.6 always-overwrite + supabase-security agent/guide entries, Phase 3 self-learning preservation) restructured: bullet lists with inline-coded path references converted into fenced `text` blocks. Same content, but agent-context path scanners now correctly recognize these as generated-output references rather than this-repo references.
+- **`skills/launch-check/SKILL.md`** — Roadmap section's "planned but not yet shipped" template files (`templates/e2e-patterns.md`, `templates/contract-test-patterns.md`, `templates/playbooks/*`) consolidated into a single fenced "Planned" block.
+- **`README.md`** / **`README-ko.md`** — three sections describing wizard-generated output (`prd/service-prd.md`, observability boilerplate file list, `.claude/settings.json` mention in upgrade migration + try-it-on-throwaway-dir intro) reorganized so the path lists live inside fenced `text` blocks. README + README-ko stay in sync (project rule).
 - **`skills/wizard/SKILL.md`** — Step 5.3 (AI-Generate Specialized Files) rewritten to eliminate the apparent-freeze experience during agent/guide generation. Three concrete changes: (1) pre-announcement box printed before any Agent tool call showing `n_agents + n_guides + n_batches + expected_time`, so the user knows how long the silent window actually is; (2) **PARALLEL REQUIRED** directive with `batch_size = 4` — within each batch, Agent tool calls MUST be issued as multiple tool-use blocks in a single assistant message (matching `templates/parallel-execution.md` convention), reducing wall-time from `sum(worker)` to `max(worker)` per batch (~4× speedup at 12+ agents); (3) per-batch progress line printed after each batch's tool results return (`[i/N] Done: {names} (Xs) ✓ | Remaining: M`). Includes rate-limit fallback to `batch_size = 2` (never sequential — sequential recreates the silence problem). Prompt templates and output paths unchanged; classification.md/options.md remain serial at the end.
 - **`README.md`** / **`README-ko.md`** — Quick Start now includes an explicit Step 3 `/reload-plugins` after `/harness-marketplace:wizard` completes, with a callout explaining the two different reload moments (full restart after plugin install due to [#35641](https://github.com/anthropics/claude-code/issues/35641), vs. `/reload-plugins` being sufficient after wizard since the generated files live in project-local `.claude/`). Added new Troubleshooting subsection "Wizard finished, but `/project-harness` is not available" with cause, fix, and verification steps.
+
+### Notes
+
+- Repo's AI-Readiness score moved 45 → 57 (AI-Fragile, amber) on the v2 rubric after this bundle. Hallucinated-path count went from 38 → 0. Remaining headroom: Cat C (tribal knowledge / MEMORY.md / ADR — 5/20), Cat D (ARCHITECTURE.md / mermaid dependency map — 2/15), Cat B1 (README.md is 842 lines — compass-not-encyclopedia compression pending).
 
 ## [0.8.0] - 2026-04-17
 

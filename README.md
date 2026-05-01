@@ -281,7 +281,13 @@ When a project description is provided (manual mode) or interview is used, AI ta
 /project-harness interview
 ```
 
-Run a **multi-round deep service interview** that produces a comprehensive PRD (`.claude/skills/project-harness/prd/service-prd.md`). The interview creates domain-expert agents via deep research (WebSearch), defines development team composition, and tracks implementation clarity % across 10 dimensions.
+Run a **multi-round deep service interview** that produces a comprehensive PRD inside the generated harness (file landed at the path shown below — exists in your project after wizard run, not in this plugin repo):
+
+```text
+.claude/skills/project-harness/prd/service-prd.md
+```
+
+The interview creates domain-expert agents via deep research (WebSearch), defines development team composition, and tracks implementation clarity % across 10 dimensions.
 
 **How it works:**
 
@@ -336,7 +342,13 @@ cd <your-project>
 
 The upgrade skill auto-fetches the latest templates from GitHub (v0.4.0+), preserves your `project-config.yaml`, hook Custom Rules, and `learning-log.yaml`, and writes a timestamped backup to `.claude/backups/project-harness-{timestamp}/`. Use `--offline` to force the local plugin cache, `--preview` to see the plan without applying, `--backup-only` to snapshot without upgrading.
 
-**Legacy v1.x hook auto-migration** (since v0.5.1): if the upgrade detects that your project was generated against the old v1.x hook contract (silent no-ops under Claude Code v2.x — see [#16](https://github.com/aiAgentDevelop/harness-marketplace-plugin/issues/16)), the entire `hooks/` directory is replaced with the v2.x format. Your old hooks live in the backup; copy any Custom Rules manually from there. The upgrade will also offer to replace the hook entries in `.claude/settings.json` — **accept this**, otherwise Claude Code won't actually register the new hooks.
+**Legacy v1.x hook auto-migration** (since v0.5.1): if the upgrade detects that your project was generated against the old v1.x hook contract (silent no-ops under Claude Code v2.x — see [#16](https://github.com/aiAgentDevelop/harness-marketplace-plugin/issues/16)), the entire `hooks/` directory is replaced with the v2.x format. Your old hooks live in the backup; copy any Custom Rules manually from there. The upgrade will also offer to replace the hook entries in your project's local Claude Code settings file:
+
+```text
+.claude/settings.json    (in your project root, not this plugin repo)
+```
+
+**Accept the replacement**, otherwise Claude Code won't actually register the new hooks.
 
 **Verify** after a completed upgrade:
 
@@ -449,11 +461,22 @@ The catalog currently lists 11 platforms: Sentry, Rollbar, Datadog, New Relic, P
 
 ### What gets generated
 
-When you pick a platform with `integration_template_path` set (currently Sentry + PostHog), the wizard emits boilerplate directly into your project:
+When you pick a platform with `integration_template_path` set (currently Sentry + PostHog), the wizard emits boilerplate directly into your project. Files written (paths exist in your project after wizard, not in this plugin repo):
 
-- **Sentry + Next.js** → `instrumentation.ts`, `app/error-boundary.tsx`, `app/api/health/route.ts`
-- **Sentry + Node backend** → `src/instrument.ts`, health check endpoint
-- **PostHog + Next.js** → `app/providers/posthog-provider.tsx`, `docs/events-catalog.md`
+```text
+Sentry + Next.js
+  instrumentation.ts
+  app/error-boundary.tsx
+  app/api/health/route.ts
+
+Sentry + Node backend
+  src/instrument.ts
+  (health check endpoint)
+
+PostHog + Next.js
+  app/providers/posthog-provider.tsx
+  docs/events-catalog.md
+```
 
 All generated files end with a `═══ CUSTOM RULES BELOW (preserved on upgrade) ═══` marker, so your team's edits survive `/harness-marketplace:upgrade`.
 
@@ -793,7 +816,11 @@ Notable releases:
 
 ## Try it on a throwaway directory first
 
-Worried about installing a wizard that touches `.claude/settings.json` and writes CLAUDE.md into your real project? Don't be — test it in an empty dir first:
+Worried about installing a wizard that touches your project's local settings (path shown below) and writes CLAUDE.md into your real project? Don't be — test it in an empty dir first:
+
+```text
+.claude/settings.json
+```
 
 ```bash
 mkdir harness-try && cd harness-try
