@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **`skills/wizard/SKILL.md`** — new **Phase 7.5: GitHub Star Prompt** runs after a successful wizard completion (only on the "승인" branch). Asks once whether to star the repo; selecting "Star on GitHub" attempts `gh api -X PUT user/starred/aiAgentDevelop/harness-marketplace-plugin` first and falls back to opening the repo in the OS default browser (`start` / `open` / `xdg-open`). A global marker `~/.claude/.harness-marketplace-star-prompted` is written after any answer (including "Skip"), so the prompt is shown at most once per machine. KR/EN branching via the existing `wizard_language` variable. Note: Claude Code's plugin system does not expose a hook that fires the instant `/plugin install` completes, so wizard completion is the closest natural moment to surface this.
+
 ## [0.9.0] - 2026-05-01
 
 ### Highlights
