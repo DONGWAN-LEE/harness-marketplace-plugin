@@ -1647,6 +1647,7 @@ AskUserQuestion:
 
 If "승인":
   → Print: "✅ /project-harness 로 개발 파이프라인을 실행할 수 있습니다."
+  → Continue to Phase 7.5 (star prompt)
   → Done
 
 If "수정 후 재생성":
@@ -1658,6 +1659,88 @@ If "취소":
   → Remove .claude/skills/project-harness/ directory
   → Print: "취소되었습니다."
 ```
+
+## Phase 7.5: GitHub Star Prompt (one-time)
+
+Runs **only on the "승인" branch** of Phase 7. Not executed on "수정 후 재생성" (re-enters Phase 5, will hit Phase 7.5 again on next 승인) or "취소" (user discarded the result — asking for a star is inappropriate).
+
+Goal: one-time, polite nudge at the moment the user has finished a successful wizard run. Skipped silently on every subsequent wizard completion via a global marker file.
+
+```
+Step 1 — Check marker:
+  Bash: test -f ~/.claude/.harness-marketplace-star-prompted
+  If exit 0 (marker exists) → skip the entire Phase 7.5 silently.
+
+Step 2 — Display banner (use wizard_language from Step 0):
+
+  If wizard_language == "ko":
+    ━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    harness-marketplace-plugin 은 무료 오픈소스입니다.
+    GitHub star 한 번이면 다른 개발자들이 더 쉽게 발견합니다.
+    ━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  If wizard_language == "en":
+    ━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    harness-marketplace-plugin is free and open source.
+    One ★ helps other developers find it.
+    ━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Step 3 — AskUserQuestion (one-shot, single-select):
+
+  question (ko): "도움이 되셨다면 별 한 번 부탁드릴게요."
+  question (en): "Would you star the repo on GitHub?"
+  header: "GitHub Star"
+  options:
+    - label: "Star on GitHub"
+      description (ko): "gh CLI 가 인증되어 있으면 자동으로 별을 등록하고, 안 되면 브라우저로 GitHub 페이지를 엽니다."
+      description (en): "Uses the gh CLI to star automatically if authenticated; otherwise opens the repo in your browser."
+    - label: "Skip"
+      description (ko): "건너뜁니다. 다시 묻지 않습니다."
+      description (en): "Skip. You won't be asked again."
+
+Step 4 — Branch on answer:
+
+  Case "Star on GitHub":
+
+    (a) Try gh CLI first:
+        Bash: gh api -X PUT user/starred/aiAgentDevelop/harness-marketplace-plugin --silent 2>/dev/null
+
+        If exit code == 0:
+          Print (ko): "⭐ Star 완료 — 감사합니다!"
+          Print (en): "⭐ Starred — thank you!"
+          → Go to Step 5.
+
+        Else (gh missing, not authenticated, network error, etc.) → fall through to (b).
+
+    (b) Fallback — open browser (detect OS via `uname -s` or environment):
+
+        Windows (uname -s contains MINGW/MSYS/CYGWIN, or $OS == "Windows_NT"):
+          Bash: start "" "https://github.com/aiAgentDevelop/harness-marketplace-plugin"
+
+        macOS (uname -s == "Darwin"):
+          Bash: open "https://github.com/aiAgentDevelop/harness-marketplace-plugin"
+
+        Linux (uname -s == "Linux"):
+          Bash: xdg-open "https://github.com/aiAgentDevelop/harness-marketplace-plugin"
+
+        Print (ko): "🌐 브라우저로 이동했습니다 — 페이지에서 ★ 버튼을 눌러주세요."
+        Print (en): "🌐 Opened in browser — please click the ★ button."
+        Print URL on a separate line as a fallback for headless / failed-launch environments:
+          https://github.com/aiAgentDevelop/harness-marketplace-plugin
+
+  Case "Skip":
+    No output.
+
+Step 5 — Create marker (always, even on Skip — the user answered the question, do not re-ask):
+  Bash: mkdir -p ~/.claude && touch ~/.claude/.harness-marketplace-star-prompted
+
+Step 6 — Done.
+```
+
+**Implementation notes for the wizard agent**
+- The marker is **global** (`~/.claude/.harness-marketplace-star-prompted`), not per-project — once the user has answered (either choice), they are not asked again, even when running wizard in a different repository.
+- Always redirect `gh` stderr to `/dev/null` so unauthenticated/missing-gh error messages don't leak into the wizard's final output.
+- Do not call this Phase from "수정 후 재생성" or "취소" branches.
 
 </Steps>
 
@@ -1845,6 +1928,7 @@ Why bad: No descriptions — user can't make informed choice.
 - [ ] Phase 6: Structure validation passed (including hooks, CI/CD, self-learning checks)
 - [ ] Phase 6: Plan dry-run passed
 - [ ] Phase 7: User confirmation received (summary includes enforcement, CI/CD, self-learning status)
+- [ ] Phase 7.5: Star prompt shown (only on "승인" branch; skipped silently if `~/.claude/.harness-marketplace-star-prompted` exists; marker created after answer regardless of choice)
 - [ ] No unresolved template variables in generated files
 - [ ] All agents listed in config have corresponding .md files
 - [ ] All guides listed in config have corresponding .md files

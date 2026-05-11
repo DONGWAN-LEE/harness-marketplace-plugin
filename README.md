@@ -117,6 +117,8 @@ That's it. When you're ready to ship to production, `/harness-marketplace:launch
 
 > **Important:** After installation, you must **completely quit Claude Code and start a new session**. `/reload-plugins` reloads commands but does **not** reload skills due to a known bug ([#35641](https://github.com/anthropics/claude-code/issues/35641)). Without a full restart, `/harness-marketplace:wizard` will show `Unknown skill`.
 
+> **One-time GitHub star prompt.** When the wizard finishes successfully (Phase 7 "승인"), you are asked **once** whether to star the repo. "Star on GitHub" uses `gh` CLI to star automatically if authenticated, otherwise opens the repo in your browser. A marker at `~/.claude/.harness-marketplace-star-prompted` ensures the prompt is shown at most once per machine — answering "Skip" also creates the marker, so you won't be asked again.
+
 Or install manually:
 
 ```bash

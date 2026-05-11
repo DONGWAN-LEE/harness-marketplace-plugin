@@ -117,6 +117,8 @@ cd <your-project>
 
 > **중요:** 설치 후 반드시 **Claude Code를 완전히 종료하고 새 세션을 시작**해야 합니다. `/reload-plugins`는 commands만 reload하고 **skills는 reload하지 않는** 알려진 버그([#35641](https://github.com/anthropics/claude-code/issues/35641))가 있습니다. 세션을 완전히 재시작하지 않으면 `/harness-marketplace:wizard` 실행 시 `Unknown skill` 오류가 발생합니다.
 
+> **GitHub star 1회 안내.** wizard 가 성공적으로 끝나면 (Phase 7 "승인") **한 번만** GitHub star 를 묻습니다. "Star on GitHub" 선택 시 `gh` CLI 가 인증되어 있으면 자동으로 별을 등록하고, 안 되면 브라우저로 GitHub 페이지를 엽니다. `~/.claude/.harness-marketplace-star-prompted` 마커로 머신당 최대 1회만 표시되며 — "Skip" 을 선택해도 마커가 생성되므로 다시 묻지 않습니다.
+
 또는 수동 설치:
 
 ```bash
