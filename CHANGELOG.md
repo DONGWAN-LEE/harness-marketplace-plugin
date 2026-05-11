@@ -7,9 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.10.0] - 2026-05-11
+
+### Highlights
+
+wizard 완료 직후 **1회 GitHub star 프롬프트** 신설. 사용자가 wizard 로 harness 를 끝까지 만들고 "승인" 분기를 탄 시점에만 한 번 노출되며, 머신별 글로벌 마커 (`~/.claude/.harness-marketplace-star-prompted`) 로 재노출 방지. "Star on GitHub" 선택 시 `gh` CLI 가 있으면 자동 별 등록, 없으면 OS 기본 브라우저로 fallback. 사용자가 처음에 요청한 "/plugin install 직후" 시점은 Claude Code 플러그인 시스템에 공식 hook 이 없어 (plugin.json / marketplace.json 스키마에 `postInstallMessage` / `welcome` / `onInstall` 필드 없음) 차선책으로 wizard 완료 시점을 채택.
+
 ### Added
 
-- **`skills/wizard/SKILL.md`** — new **Phase 7.5: GitHub Star Prompt** runs after a successful wizard completion (only on the "승인" branch). Asks once whether to star the repo; selecting "Star on GitHub" attempts `gh api -X PUT user/starred/aiAgentDevelop/harness-marketplace-plugin` first and falls back to opening the repo in the OS default browser (`start` / `open` / `xdg-open`). A global marker `~/.claude/.harness-marketplace-star-prompted` is written after any answer (including "Skip"), so the prompt is shown at most once per machine. KR/EN branching via the existing `wizard_language` variable. Note: Claude Code's plugin system does not expose a hook that fires the instant `/plugin install` completes, so wizard completion is the closest natural moment to surface this.
+- **`skills/wizard/SKILL.md`** — new **Phase 7.5: GitHub Star Prompt** runs after a successful wizard completion (only on the "승인" branch). Asks once whether to star the repo; selecting "Star on GitHub" attempts `gh api -X PUT user/starred/aiAgentDevelop/harness-marketplace-plugin` first and falls back to opening the repo in the OS default browser (`start` / `open` / `xdg-open`). A global marker `~/.claude/.harness-marketplace-star-prompted` is written after any answer (including "Skip"), so the prompt is shown at most once per machine. KR/EN branching via the existing `wizard_language` variable. Note: Claude Code's plugin system does not expose a hook that fires the instant `/plugin install` completes, so wizard completion is the closest natural moment to surface this. (#59 / #60)
+- **`README.md`** / **`README-ko.md`** — Installation 섹션에 1회 star 프롬프트 동작 안내 blockquote 추가 (KR/EN 동기).
 
 ## [0.9.0] - 2026-05-01
 
