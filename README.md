@@ -29,8 +29,6 @@ If you've used Claude Code on anything larger than a toy project, you've probabl
 
 This plugin replaces all of that with a single wizard run. You answer 5–25 questions (depending on mode), and you walk away with a pipeline a small team can actually depend on — including an observability gate that refuses to let you ship blind.
 
-And we publish our own benchmark showing **exactly where the plugin wins and where it doesn't**. See [Honest Benchmarks](#honest-benchmarks-phase-1-v2--endtoend-isoiec-25010--owasp-asvs--dora) below — we're the plugin that admits most of its value comes from the CLAUDE.md it writes, not magic.
-
 ---
 
 ## Quick Start
@@ -719,14 +717,6 @@ harness-marketplace/
 ├── scripts/
 │   ├── validate-harness.js        # Full validation (structure, hooks, CI/CD, self-learning)
 │   └── merge-hooks.js             # Non-destructive settings.json hook merger
-├── benchmarks/                    # Phase 0.5 fair 3-layer evaluation (harness effectiveness study)
-│   ├── README.md                  # 3-layer methodology + honesty safeguards
-│   ├── PROTOCOL.md                # Pre-registered hypotheses, metrics, decision rules
-│   ├── tasks/                     # 10 tasks across security/orchestration/pipeline
-│   ├── reference-projects/        # Seed projects + harness overlays
-│   ├── runner/                    # Multi-phase runner (invoke/control/treatment/probe/batch)
-│   ├── scorer/                    # Automated + 7-dim LLM judge + aggregate
-│   └── results/                   # phase05-report.md, scored/, aggregated.json
 ├── CHANGELOG.md                   # Version history
 ├── CLAUDE.md                      # Project instructions
 ├── LICENSE                        # Apache-2.0
@@ -742,58 +732,6 @@ harness-marketplace/
 
 - **Claude Code** with Agent Teams enabled (`CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1`)
 
-## Honest Benchmarks (Phase 1 v2 — End-to-End, ISO/IEC 25010 + OWASP ASVS + DORA)
-
-End-to-end empirical evaluation of `Plain Claude Code` vs `harness-marketplace` (v0.6.0 wizard output) grounded in international standards (ISO/IEC 25010, OWASP ASVS v4.0.3, OWASP Top 10 2021, CWE Top 25, DORA, HELM principles). Replaces the earlier Phase 0.5 single-task design (accessible via git history at commit `a455abe`).
-
-**Design**: 13-axis weighted scoring (total 100%) across 3 conditions × 17 OWASP adversarial tasks + 12 multi-step sprint cells (8 sequential steps each, state carry-over). Pre-registered [`PROTOCOL-v2.md`](./benchmarks/PROTOCOL-v2.md) frozen before any runs collected.
-
-### Headline result (Pilot + Slim, 198 effective units, $63.78)
-
-| Condition | Weighted Total | Notes |
-|---|---:|---|
-| `bare_claude` (no plugin) | 83.0 | baseline |
-| **`claude_md_only`** (CLAUDE.md only, no skills/hooks) | **88.1 ← winner** | wizard-generated CLAUDE.md alone |
-| `full_harness` (v0.6.0 wizard output) | 86.8 | full skills + hooks + agents |
-
-The **wizard-generated `CLAUDE.md`** is the load-bearing orchestration artifact. The skills/hooks/agents layer adds measurable polish on three axes:
-
-| Axis | bare | cmo | harness | Winner |
-|---|---:|---:|---:|---|
-| **Perf — Cost** (sequential work) | 83 | 81 | **84** | full_harness |
-| **Compatibility** (scope discipline) | 89 | 92 | **97** | full_harness |
-| **Usability** (judge rubric) | 54 | 58 | **62** | full_harness |
-
-But `claude_md_only` wins on Functional Suitability (86 vs 82), Security ASVS L2 (77 vs 69), CWE-weighted defects (99 vs 99 tie), Maintainability (96 vs 96 tie), Wall-time (88 vs 87), DORA Lead Time (93 vs 91).
-
-**Honest interpretation**: most of the harness's measurable lift comes from the wizard-generated CLAUDE.md (which `bare_claude` doesn't have). The runtime hooks/skills add genuine value on polish axes but do not move the security needle in this benchmark configuration — agents already self-align via CLAUDE.md conventions before runtime hooks need to fire (avg 0.1 hook BLOCK/run on harness condition).
-
-**Zero regressions** observed across 96 sequential sprint steps (all conditions). The harness's regression-loop never had anything to catch.
-
-### Decision evaluation (per PROTOCOL-v2 §7)
-
-| Hypothesis | Pilot | Slim |
-|---|---|---|
-| H1 (Security ASVS gap ≥ 15) | ❌ +3 NOT met | ❌ +3 NOT met |
-| H3 (Weighted total gap ≥ 5) | ❌ +3.9 NOT met | ❌ +3.8 NOT met |
-| H5 (cmo between bare & harness) | ❌ INVERTED | ❌ INVERTED |
-
-Both stages agree: the plugin's measurable impact is dominated by its wizard-generated CLAUDE.md, not by the runtime skills/hooks layer. Adopt the plugin for the orchestration scaffolding; expect skills/hooks to add Compatibility / Usability / Perf-Cost polish on multi-step lifecycle work.
-
-```bash
-# Run the benchmark (resumable, dedup via summary.json existence check)
-cd benchmarks && npm install
-node scorer/aggregate-v2.js --verify-weights      # asserts 13 axes total 100%
-node scorer/verify-blinding.js                    # asserts judge prompt clean of condition labels
-node runner/render-seeds.js                       # build reference-projects/{claude-md-only,harness}-{nextjs,fastapi}/
-node runner/batch.js --stage pilot --concurrency 2 --limit 25  # OWASP A2 chunks
-node runner/batch.js --stage slim --concurrency 2 --limit 4    # sprint chunks
-node scorer/judge-batch.js --stage slim --concurrency 3        # blind LLM judge
-node scorer/aggregate-v2.js --stage slim                       # produce reports/slim-report.md
-```
-
-See [`benchmarks/README.md`](./benchmarks/README.md) for layout, [`benchmarks/PROTOCOL-v2.md`](./benchmarks/PROTOCOL-v2.md) for pre-registered hypotheses + decision rules, and [`benchmarks/reports/slim-report.md`](./benchmarks/reports/slim-report.md) for the full 13-axis matrix, per-task ASVS breakdown, and "where harness loses" honesty section.
-
 ## Version History
 
 See [**GitHub Releases**](https://github.com/aiAgentDevelop/harness-marketplace-plugin/releases) for the full release page (tags, source tarballs, and formatted release notes) or [`CHANGELOG.md`](./CHANGELOG.md) for the in-repo changelog.
@@ -805,7 +743,7 @@ Notable releases:
 | [**v0.9.0**](https://github.com/aiAgentDevelop/harness-marketplace-plugin/releases/tag/v0.9.0) | AI-Readiness infrastructure — vendored stdlib-only scorer (`scripts/ai-readiness-score.py`) + GitHub Actions gate + husky pre-commit gate (broken-ref threshold 5) + `MEMORY.md` + 5 ADRs (`docs/adr/`) + `docs/ARCHITECTURE.md` with three mermaid diagrams + `.github/CODEOWNERS` + PR template + per-module standardization (Owns / Patterns / Cross-deps / Why-marker). Repo's own AI-Readiness score: 45 → **91 / 100 (AI-Native)** |
 | [v0.8.0](https://github.com/aiAgentDevelop/harness-marketplace-plugin/releases/tag/v0.8.0) | Observability layer — wizard Phase 4 Step D required gate + Sentry/PostHog PoC integration templates + `launch-check` pre-launch audit skill (Section 1 safety net + Section 2 operational readiness with 7 blocking checks) + 11-platform observability catalog + `observability-auditor` agent + `observability-fundamentals` guide |
 | [v0.7.0](https://github.com/aiAgentDevelop/harness-marketplace-plugin/releases/tag/v0.7.0) | Interview mode (`/project-interview`) — multi-round deep service interview producing comprehensive PRD with domain-expert agents, team composition, and 10-dimension implementation clarity tracking |
-| [v0.6.0](https://github.com/aiAgentDevelop/harness-marketplace-plugin/releases/tag/v0.6.0) | Orchestration-by-default (auto-generated `./CLAUDE.md`) + real parallel Fan-out/Fan-in workers + Phase 2.5 codebase-analysis + TDD strategy + Supabase security gate + monitor mode + Phase 1 v2 benchmark |
+| [v0.6.0](https://github.com/aiAgentDevelop/harness-marketplace-plugin/releases/tag/v0.6.0) | Orchestration-by-default (auto-generated `./CLAUDE.md`) + real parallel Fan-out/Fan-in workers + Phase 2.5 codebase-analysis + TDD strategy + Supabase security gate + monitor mode |
 | [v0.5.2](https://github.com/aiAgentDevelop/harness-marketplace-plugin/releases/tag/v0.5.2) | upgrade skill & validate-harness polish (bugs found in post-v0.5.1 field test) |
 | [v0.5.1](https://github.com/aiAgentDevelop/harness-marketplace-plugin/releases/tag/v0.5.1) | upgrade skill auto-migrates legacy v1.x hooks |
 | [v0.5.0](https://github.com/aiAgentDevelop/harness-marketplace-plugin/releases/tag/v0.5.0) | ⚠️ BREAKING — hook templates migrated to Claude Code v2.x (stdin JSON + exit 2) |

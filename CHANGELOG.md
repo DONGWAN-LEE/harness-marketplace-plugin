@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Removed
+
+- **`benchmarks/`** (entire directory) — Phase 1 v2 benchmark infrastructure (runner / scorer / tasks / reference-projects / results / docs) removed along with all README references. The published empirical data did not represent the plugin's intended value proposition for external readers.
+
+### Changed
+
+- **`benchmarks/results/agent-results.json`** → **`agent-results.json`** (repo root) — relocated so the AI-Readiness scoring KPI summary survives the `benchmarks/` removal. `.claude/` is gitignored, so root placement keeps it tracked.
+- **`README.md`** / **`README-ko.md`** — "Honest Benchmarks" 섹션 + intro 언급 + Plugin Structure tree 의 `benchmarks/` 블록 + Version History v0.6.0 row 의 `Phase 1 v2 benchmark` 문구 제거.
+- **`CLAUDE.md`** / **`MEMORY.md`** — Cross-module dependencies 의 `benchmarks/` bullet 제거.
+- **`docs/ARCHITECTURE.md`** — mermaid 다이어그램의 `benchmarks/` 노드 + edge + 해석 bullet 제거.
+- **`scripts/ai-readiness-score.py`** — eval signal 튜플에서 `"benchmarks"` 제거 (`agent-results.json` glob 은 위치 무관하게 동작하므로 점수에 영향 없음).
+- **`.gitignore`** — `benchmarks/results/` 관련 규칙 블록 제거.
+
 ## [0.10.0] - 2026-05-11
 
 ### Highlights
@@ -52,13 +65,13 @@ AI-Readiness 인프라 신설 — 레포 자체가 v2 100점 루브릭 (7 카테
 
 ### Notes
 
-- Repo's AI-Readiness score moved 45 → 57 (AI-Fragile, amber) after the **track A bundle** (CI gate, ref-fence, governance), then **57 → 87 (AI-Ready, green)** after the **C/D foundations bundle** (MEMORY.md + 5 ADRs + ARCHITECTURE.md + per-module Owns/Patterns/Deps/Why-marker standardization across all 8 modules), then **87 → 91 (AI-Native, top tier)** after the **Phase 2 F/G refinement** (husky pre-commit gate + benchmarks/results/agent-results.json). All A-G categories now hit ≥ 87% of max except Cat B (13/20, README compass-not-encyclopedia compression pending) and Cat D (13/15, 2 pts gated on monorepo workspace file which doesn't apply here).
+- Repo's AI-Readiness score moved 45 → 57 (AI-Fragile, amber) after the **track A bundle** (CI gate, ref-fence, governance), then **57 → 87 (AI-Ready, green)** after the **C/D foundations bundle** (MEMORY.md + 5 ADRs + ARCHITECTURE.md + per-module Owns/Patterns/Deps/Why-marker standardization across all 8 modules), then **87 → 91 (AI-Native, top tier)** after the **Phase 2 F/G refinement** (husky pre-commit gate + `agent-results.json` distilled KPI summary). All A-G categories now hit ≥ 87% of max except Cat B (13/20, README compass-not-encyclopedia compression pending) and Cat D (13/15, 2 pts gated on monorepo workspace file which doesn't apply here).
 
 ### Added (Phase 2 — F/G refinement)
 
 - **`.husky/pre-commit`** (new) — local gate that runs `scripts/ai-readiness-score.py` and blocks the commit if hallucinated path refs exceed 5 (mirrors the CI threshold in `.github/workflows/ai-readiness.yml`). Skips silently if Python or the scorer aren't available so contributors without a local Python install aren't blocked. Provides actionable remediation hint about fenced `text` blocks for generated-output paths.
 - **`package.json`** (modified) — `devDependencies.husky` (`^9.1.0`) + `scripts.prepare` (`husky || true`) so `npm install` registers the hook on contributor machines. Skip-on-error keeps fresh clones from blowing up if husky binary isn't yet resolved.
-- **`benchmarks/results/agent-results.json`** (new) — distilled KPI summary across smoke / pilot / slim stages. Schema: per-run cells planned vs completed + cost vs budget + per-condition weighted totals (bare_claude / claude_md_only / full_harness). `harness_lift` block compares full_harness vs bare on the largest-n stage. Source aggregates remain canonical for full per-condition / per-axis data.
+- **`agent-results.json`** (new, repo root) — distilled KPI summary. Schema: per-run cells planned vs completed + cost vs budget + per-condition weighted totals. The file's discoverability lets the AI-Readiness scorer (Cat G — Agent Outcomes) pick it up via `**/agent-results.json` glob.
 
 ## [0.8.0] - 2026-04-17
 
@@ -128,7 +141,6 @@ Interview mode (`/project-interview`) — 다중 라운드 딥 서비스 인터�
 - **Monitor mode** — `/project-harness monitor --backend|--frontend` CronCreate 기반 idle 자동 감시 (#32)
 - **11 reference files** — progress-format, ui-conventions, handoff-templates, schemas, guide-injection, monitor-mode, parallel-execution, tdd-implementation, ui-defect-patterns, fsd-scaffold-patterns, classification (#32, #34, #36)
 - **Game domain 확장** — 4 신규 agents (gs-gacha-compliance, gs-integrity-auditor, t-game-api-architect, t-game-backend-engineer) + 5 guides (game-security, gacha-system, shop-iap, ranking-system, save-system) (#32 Stage C)
-- **Phase 0.5 benchmark infrastructure** — fair 3-layer 평가 (hooks / orchestration / pipeline), 10 adversarial 태스크, 7-dim LLM judge rubric + honesty safeguards (#28)
 
 ### Added — Enforce real parallel orchestration ([#35](https://github.com/aiAgentDevelop/harness-marketplace-plugin/issues/35))
 
@@ -365,11 +377,11 @@ own reference file so `orchestrator.md` stays under the size threshold.
 
 ### Added — Wizard generates project-root CLAUDE.md for orchestration-by-default ([#29](https://github.com/aiAgentDevelop/harness-marketplace-plugin/issues/29))
 
-Closes the gap identified in PR #28's benchmark: after wizard completes, the full
-orchestration scaffolding (`/project-harness` + sub-skills + agents) is installed
-but nothing nudges the user or Claude Code to actually invoke it. A bare "add
-feature X" chat message used to fall through to direct editing with only hooks
-active, leaving Layers 2-3 (orchestration, pipeline) scaffolded-but-dormant.
+After wizard completes, the full orchestration scaffolding (`/project-harness` +
+sub-skills + agents) is installed but nothing nudges the user or Claude Code
+to actually invoke it. A bare "add feature X" chat message used to fall through
+to direct editing with only hooks active, leaving Layers 2-3 (orchestration,
+pipeline) scaffolded-but-dormant.
 
 - `templates/CLAUDE.md.template` — project-root CLAUDE.md template. Declares
   `/project-harness` as the default entrypoint for non-trivial work, documents
@@ -407,73 +419,6 @@ CLAUDE.md generation is pure template rendering (substitution + conditional
 blocks) using the wizard's existing template engine. Domain verify agents at
 `wizard/SKILL.md` L953 remain independent — they spawn only during
 `/project-verify` within the orchestration pipeline, not during wizard setup.
-
-### Added — Phase 0.5 fair 3-layer benchmark ([#27](https://github.com/aiAgentDevelop/harness-marketplace-plugin/issues/27), [#28](https://github.com/aiAgentDevelop/harness-marketplace-plugin/pull/28))
-
-Replaces the structurally-biased Phase 0 benchmark that could only measure
-1 of 3 advertised value propositions (single-shot `claude -p` cannot invoke
-slash commands, so orchestration and pipeline layers were unmeasurable by
-design). Phase 0.5 rebuilds the measurement infrastructure, adds adversarial
-tasks, and introduces pre-registered decision rules.
-
-- `benchmarks/PROTOCOL.md` — pre-registered hypotheses, primary metrics per
-  layer, and win/tie/loss decision rules committed before any runs.
-- `benchmarks/runner/invoke.js` — shared stream-json wrapper capturing
-  per-invocation tokens, cost, tool calls, and hook events.
-- `benchmarks/runner/{run-control,run-treatment,probe,batch}.js` — multi-phase
-  runner supporting control / treatment (plan→[debug]→implement→verify with
-  regression loop) / fire-and-forget modes.
-- `benchmarks/runner/render-harness.js` — renders the wizard's `templates/*.md`
-  into `.claude/skills/project-*/SKILL.md` with minimal variable substitution,
-  so benchmark temp dirs have a real orchestrator + sub-skills.
-- **10 adversarial tasks** across 3 categories: 6 security (secret-guard /
-  protected-files / pattern-guard / db-safety targets), 3 orchestration
-  (scope-drift, verify-trap, cross-file coord), 1 pipeline (regression loop).
-- `benchmarks/scorer/aggregate.js` — per-layer rollup with automatic
-  "where harness loses" section (bottom-3 quality delta + top-3 cost ratio).
-
-### Changed
-
-- `benchmarks/scorer/automated.js` — rewrite to consume the new task registry
-  (`benchmarks/tasks/task-registry.js`), parse stream-json hook events, compute
-  `scope_drift_files` via git-diff, evaluate `risky_signature` predicates
-  (regex-in-file / regex-in-any-file / regex-in-stdout / file-modified-from-seed).
-- `benchmarks/scorer/llm-judge.js` — extend from 4 → 7 rubric dimensions.
-  Adds `plan_adherence`, `scope_creep` (reverse-scored), `over_engineering`
-  (reverse-scored). Stronger blinding: strips `.claude/`, `CLAUDE.md`, `state/`,
-  `TASK.md`, and phase markers (`Plan:`, `Verify:`, `project-*`) from judge input.
-- `benchmarks/reference-projects/*-seed/` — expanded to support the new
-  task set: Next.js seed gains dashboard/profile/settings pages (shared
-  `UserBadge` block candidate) + admin page (decoy — intentionally different);
-  FastAPI seed gains `app/routes/users.py`, `app/schemas/user.py`,
-  `tests/test_users.py`, and `requirements.lock` (for protected-edit task).
-- `benchmarks/reference-projects/*-harness/.claude/settings.json` — Next.js
-  overlay adds `PostToolUse` lint hook; FastAPI `protected-files.sh` pattern
-  list adds `requirements.lock`.
-
-### Fixed
-
-- **Stream-json hook event classifier** in `benchmarks/runner/invoke.js` and
-  `benchmarks/scorer/automated.js`. The previous code matched `type === "hook"`
-  and `hook_event_name`, neither of which appears in actual Claude Code output.
-  Real events are `type: "system"` with `subtype: "hook_started" | "hook_response"`,
-  `hook_name: "Event:Matcher"`, and exit_code / outcome on response. Effect:
-  Phase 0.5's initial report showed `Hook events (C→T) 0→0` on every task
-  despite hooks actually firing hundreds of times. After fix, the same runs
-  show 49–148 hook invocations per treatment task, with specific guard names
-  (e.g. `protected-files`) extracted from the stderr `[PROTECTED]` tag.
-
-### Removed
-
-- Phase 0 artifacts (now obsolete):
-  - `benchmarks/runner/run.js` (single-shot runner — replaced by the multi-phase
-    runners listed above).
-  - `benchmarks/scorer/task-checks.js` (replaced by `benchmarks/tasks/task-registry.js`).
-  - `benchmarks/tasks/{nextjs,fastapi}-{basic,advanced,expert}.md` (6 old
-    single-file tasks — replaced by 10 adversarial tasks in 3 subdirectories).
-  - `benchmarks/results/` (Phase 0 raw data — regenerated with Phase 0.5 runs;
-    raw/ per-run artifacts are now `.gitignore`d because they contain embedded
-    git repos, only aggregated results are committed).
 
 ## [0.5.2] - 2026-04-13
 
@@ -589,9 +534,7 @@ ships the new templates for fresh wizard runs.
 - README / README-ko Plugin Structure sections list the new helper files.
 
 ### Reference
-- Issue #16 (root cause investigation, came out of the Phase 0 A/B pilot)
-- `benchmarks/reference-projects/*-harness/.claude/hooks/` (the working v2.x
-  implementation that this PR ports back into templates)
+- Issue #16 (root cause investigation)
 
 ## [0.4.0] - 2026-04-10
 

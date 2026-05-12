@@ -40,7 +40,6 @@
 - `data/*.yaml` → `skills/wizard` (질문 카탈로그) → `templates/` (보일러플레이트) → user repo 의 `.claude/skills/project-harness/` (생성된 harness)
 - `skills/upgrade` 는 `templates/` 를 다시 읽어 user repo 의 harness 를 갱신 (Custom Rules 보존)
 - `scripts/validate-harness.js` 는 wizard / upgrade 양쪽이 출력물 머지 직전 호출
-- `benchmarks/` 는 plugin 자체의 효과를 측정 (harness 적용 vs 미적용 task 통과율)
 
 ## See also
 

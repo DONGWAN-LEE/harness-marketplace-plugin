@@ -39,9 +39,7 @@ PRIMARY_CONTEXT = ("CLAUDE.md", "AGENTS.md", "SKILL.md")  # anything stronger th
 
 # Fixture / generated-content markers — files under these path substrings are not
 # treated as primary context for THIS repo. Critical for meta-tools (plugin
-# generators, benchmark harnesses) that vendor copies of OTHER projects' context
-# inside their own tree (e.g. benchmarks/results/raw/<run>/workdir/CLAUDE.md is a
-# snapshot of a benchmarked project's CLAUDE.md, not a doc of the meta-tool).
+# generators) that vendor copies of OTHER projects' context inside their own tree.
 FIXTURE_PATH_MARKERS = (
     "results/raw/",
     "reference-projects/",
@@ -135,9 +133,9 @@ def walk_files(root: Path) -> list[Path]:
 
 def _is_fixture_rel(rel_norm: str) -> bool:
     """True if a repo-relative path (with forward slashes) lies under a known
-    fixture / generated-content tree. Meta-tools (plugin generators, benchmark
-    harnesses) often vendor copies of OTHER projects' context files; those are
-    not docs of THIS repo and must not be path-validated against THIS repo."""
+    fixture / generated-content tree. Meta-tools (plugin generators) often
+    vendor copies of OTHER projects' context files; those are not docs of
+    THIS repo and must not be path-validated against THIS repo."""
     rel_norm = rel_norm.replace("\\", "/")
     if not rel_norm.startswith("/"):
         rel_norm_check = "/" + rel_norm
@@ -502,8 +500,8 @@ def score_e(repo: Path, context_files: list[Path]) -> CategoryScore:
 
     # E1 Reference accuracy: parse all path-like refs from context, verify existence.
     #
-    # Two adjustments to keep this signal useful in meta-tools (plugin generators,
-    # benchmark harnesses) where docs reference *generated* artifacts:
+    # Two adjustments to keep this signal useful in meta-tools (plugin generators)
+    # where docs reference *generated* artifacts:
     # 1. Strip fenced code blocks before extracting paths — most directory-tree
     #    listings and example output paths live there. We score the prose
     #    intent of the docs, not literal example output.
@@ -561,7 +559,7 @@ def score_e(repo: Path, context_files: list[Path]) -> CategoryScore:
     sub["E3_TaskValidation"] = min(4, e3)
 
     # E4 Prompt / agent eval tests
-    has_evals = any((repo / p).exists() for p in ("evals", "benchmarks", "agent-evals", "prompts/test", "tests/agent"))
+    has_evals = any((repo / p).exists() for p in ("evals", "agent-evals", "prompts/test", "tests/agent"))
     sub["E4_PromptTests"] = 2 if has_evals else 0
 
     pts = sum(sub.values())
@@ -669,7 +667,7 @@ def score_f(modules: list[Module], repo: Path) -> CategoryScore:
 # G. Agent Performance Outcomes
 # ----------------------------------------------------------------------------
 def score_g(repo: Path) -> CategoryScore:
-    eval_dirs = [p for p in ("evals", "benchmarks", "agent-evals", "agent-metrics") if (repo / p).exists()]
+    eval_dirs = [p for p in ("evals", "agent-evals", "agent-metrics") if (repo / p).exists()]
     metric_files = list(repo.glob("**/agent-results.json")) + list(repo.glob("**/.skill-eval.json"))
     metric_files = [m for m in metric_files if not any(seg in m.parts for seg in IGNORE_DIRS)]
     has_telemetry_hint = any(
@@ -690,7 +688,7 @@ def score_g(repo: Path) -> CategoryScore:
 
     findings: list[str] = []
     if not eval_dirs and not metric_files:
-        findings.append("agent eval / benchmark 디렉터리·결과 파일 부재 — 성능 측정 인프라 없음")
+        findings.append("agent eval 디렉터리·결과 파일 부재 — 성능 측정 인프라 없음")
     if not has_telemetry_hint:
         findings.append("AI usage telemetry 단서 없음 (session log / OpenTelemetry)")
 
