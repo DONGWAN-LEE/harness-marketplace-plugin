@@ -84,7 +84,7 @@ That's it. When you're ready to ship to production, `/harness-marketplace:launch
   │   ├── visual-qa/SKILL.md           — visual QA (if UI project)
   │   ├── verify/SKILL.md              — verification phase (all auditors parallel)
   │   ├── prd/service-prd.md            — comprehensive PRD from interview mode
-  │   ├── agents/*.md                  — AI-generated domain agents (34-agent catalog + supabase-security-gate)
+  │   ├── agents/*.md                  — AI-generated domain agents (40-agent catalog + supabase-security-gate)
   │   ├── guides/*.md                  — AI-generated development guides
   │   ├── hooks/*.sh                   — code enforcement via Claude Code hooks
   │   ├── hooks-config.json            — hook configuration for settings.json
@@ -120,7 +120,7 @@ That's it. When you're ready to ship to production, `/harness-marketplace:launch
 Or install manually:
 
 ```bash
-cp -r harness-marketplace/ ~/.claude/plugins/cache/harness-marketplace/harness-marketplace/1.0.0/
+cp -r harness-marketplace/ ~/.claude/plugins/cache/harness-marketplace/harness-marketplace/0.10.0/
 ```
 
 ## Troubleshooting
@@ -267,8 +267,8 @@ Detected:
 | C2 | Pipelines | CI, AI Code Review, Deploy, Security... (multi-select) |
 | C3 | AI review config | Comment only / Block on critical / Auto-approve |
 | L1 | Self-learning | With approval / Automatic / Disabled |
-| A | Agents | security-reviewer, performance-auditor, game-economy-auditor... (25 catalog, multi-select) |
-| G | Guides | api-design, database-design, game-design... (18 catalog, multi-select) |
+| A | Agents | security-reviewer, performance-auditor, game-economy-auditor... (40 catalog, multi-select) |
+| G | Guides | api-design, database-design, game-design... (25 catalog, multi-select) |
 
 When a project description is provided (manual mode) or interview is used, AI tags the best options with `(Recommended — reason)` labels. All options are still shown.
 
@@ -602,8 +602,8 @@ For bugfix tasks, a **systematic debug phase** runs between plan and implement �
 | project-config.yaml | **Mapped** | Wizard answers → YAML schema |
 | Hook scripts (hooks/*.sh) | **Template** | `templates/hooks/*.sh.template` |
 | CI/CD workflows (.github/workflows/*.yml) | **Template** | `templates/ci-cd/github-actions/*.yml.template` |
-| agents/*.md | **AI Generated** | Claude generates project-specific agent checklists from data/agents.yaml catalog (34 agents) |
-| guides/*.md | **AI Generated** | Claude generates project-specific development guides from data/guides.yaml catalog (18 guides) |
+| agents/*.md | **AI Generated** | Claude generates project-specific agent checklists from data/agents.yaml catalog (40 agents) |
+| guides/*.md | **AI Generated** | Claude generates project-specific development guides from data/guides.yaml catalog (25 guides) |
 | classification.md | **AI Generated** | Project-specific classification rules |
 
 ### Config-Driven Pipeline
@@ -677,10 +677,18 @@ harness-marketplace/
 ├── .claude-plugin/
 │   ├── plugin.json                # Plugin manifest (skills path declaration)
 │   └── marketplace.json           # Marketplace metadata
+├── .github/
+│   ├── CODEOWNERS                 # Module ownership for auto-review-request
+│   ├── pull_request_template.md   # PR scaffold (Summary / Category / Impact / Verification)
+│   └── workflows/
+│       └── ai-readiness.yml       # CI gate: broken-context-ref threshold ≤ 5
+├── .husky/
+│   └── pre-commit                 # Local mirror of the CI AI-Readiness gate
 ├── skills/
-│   ├── wizard/SKILL.md            # Main wizard (3 modes: interview, manual, auto-detect)
+│   ├── wizard/SKILL.md            # Main wizard (3 modes: interview, manual, auto-detect; Phase 7.5 star prompt)
 │   ├── upgrade/SKILL.md           # Harness upgrade (preserves Custom Rules + learning log)
 │   ├── ci-cd/SKILL.md             # Standalone CI/CD configuration
+│   ├── launch-check/SKILL.md      # Pre-launch readiness gate (Section 1 safety net + Section 2 ops audit)
 │   ├── learn/SKILL.md             # Team-shared learnings (git-tracked knowledge base)
 │   └── gh/SKILL.md                # GitHub workflow automation (Issue → Branch → PR)
 ├── templates/                     # Harness skeleton templates
@@ -711,14 +719,24 @@ harness-marketplace/
 │   │   ├── _log.sh                # Shared: log_block helper (writes .claude/hook-blocks.log)
 │   │   ├── *.sh.template          # 8 hook templates (read stdin, exit 2 to block)
 │   │   └── hooks-config.json.template
-│   └── ci-cd/                     # CI/CD workflow templates
-│       └── github-actions/        # 5 workflow templates
-├── data/                          # Deep-researched option datasets (14 files)
+│   ├── ci-cd/                     # CI/CD workflow templates
+│   │   └── github-actions/        # 5 workflow templates
+│   └── integrations/              # Observability integration boilerplate (Sentry, PostHog)
+│       ├── sentry/                # Next.js + Node backend init + error-boundary + health-check
+│       └── posthog/               # Next.js provider + events-catalog
+├── data/                          # Deep-researched option datasets (15 files)
 ├── scripts/
+│   ├── CLAUDE.md                  # Module context for the scripts/ tree
 │   ├── validate-harness.js        # Full validation (structure, hooks, CI/CD, self-learning)
-│   └── merge-hooks.js             # Non-destructive settings.json hook merger
+│   ├── merge-hooks.js             # Non-destructive settings.json hook merger
+│   └── ai-readiness-score.py      # Vendored stdlib-only AI-Readiness rubric scorer (CI + husky)
+├── docs/
+│   ├── ARCHITECTURE.md            # System overview (three mermaid diagrams: data flow / 3-layer / module deps)
+│   └── adr/                       # Architecture Decision Records (ADR-000 template + ADR-001..005)
+├── agent-results.json             # Distilled KPI summary (AI-Readiness Cat G — Agent Outcomes)
 ├── CHANGELOG.md                   # Version history
-├── CLAUDE.md                      # Project instructions
+├── CLAUDE.md                      # Project instructions (entry context)
+├── MEMORY.md                      # Repo-level tribal-knowledge externalization store
 ├── LICENSE                        # Apache-2.0
 ├── NOTICE                         # Attribution
 ├── package.json
@@ -740,7 +758,8 @@ Notable releases:
 
 | Version | Highlight |
 |---------|-----------|
-| [**v0.9.0**](https://github.com/aiAgentDevelop/harness-marketplace-plugin/releases/tag/v0.9.0) | AI-Readiness infrastructure — vendored stdlib-only scorer (`scripts/ai-readiness-score.py`) + GitHub Actions gate + husky pre-commit gate (broken-ref threshold 5) + `MEMORY.md` + 5 ADRs (`docs/adr/`) + `docs/ARCHITECTURE.md` with three mermaid diagrams + `.github/CODEOWNERS` + PR template + per-module standardization (Owns / Patterns / Cross-deps / Why-marker). Repo's own AI-Readiness score: 45 → **91 / 100 (AI-Native)** |
+| [**v0.10.0**](https://github.com/aiAgentDevelop/harness-marketplace-plugin/releases/tag/v0.10.0) | Wizard Phase 7.5 — one-time GitHub star prompt after successful wizard completion. `gh` CLI auto-stars when authenticated, else falls back to OS default browser. Per-machine marker (`~/.claude/.harness-marketplace-star-prompted`) ensures the prompt shows at most once. KR/EN branching via `wizard_language` |
+| [v0.9.0](https://github.com/aiAgentDevelop/harness-marketplace-plugin/releases/tag/v0.9.0) | AI-Readiness infrastructure — vendored stdlib-only scorer (`scripts/ai-readiness-score.py`) + GitHub Actions gate + husky pre-commit gate (broken-ref threshold 5) + `MEMORY.md` + 5 ADRs (`docs/adr/`) + `docs/ARCHITECTURE.md` with three mermaid diagrams + `.github/CODEOWNERS` + PR template + per-module standardization (Owns / Patterns / Cross-deps / Why-marker). Repo's own AI-Readiness score: 45 → **91 / 100 (AI-Native)** |
 | [v0.8.0](https://github.com/aiAgentDevelop/harness-marketplace-plugin/releases/tag/v0.8.0) | Observability layer — wizard Phase 4 Step D required gate + Sentry/PostHog PoC integration templates + `launch-check` pre-launch audit skill (Section 1 safety net + Section 2 operational readiness with 7 blocking checks) + 11-platform observability catalog + `observability-auditor` agent + `observability-fundamentals` guide |
 | [v0.7.0](https://github.com/aiAgentDevelop/harness-marketplace-plugin/releases/tag/v0.7.0) | Interview mode (`/project-interview`) — multi-round deep service interview producing comprehensive PRD with domain-expert agents, team composition, and 10-dimension implementation clarity tracking |
 | [v0.6.0](https://github.com/aiAgentDevelop/harness-marketplace-plugin/releases/tag/v0.6.0) | Orchestration-by-default (auto-generated `./CLAUDE.md`) + real parallel Fan-out/Fan-in workers + Phase 2.5 codebase-analysis + TDD strategy + Supabase security gate + monitor mode |
