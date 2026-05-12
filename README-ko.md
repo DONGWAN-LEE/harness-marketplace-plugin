@@ -84,7 +84,7 @@ cd <your-project>
   │   ├── visual-qa/SKILL.md           — 시각적 QA (UI 프로젝트)
   │   ├── verify/SKILL.md              — 검증 단계 (모든 auditor 병렬)
   │   ├── prd/service-prd.md            — 인터뷰 모드 종합 PRD
-  │   ├── agents/*.md                  — AI 생성 도메인 에이전트 (34-카탈로그 + supabase-security-gate)
+  │   ├── agents/*.md                  — AI 생성 도메인 에이전트 (40-카탈로그 + supabase-security-gate)
   │   ├── guides/*.md                  — AI 생성 개발 가이드
   │   ├── hooks/*.sh                   — Claude Code hook 기반 코드 강제
   │   ├── hooks-config.json            — settings.json 용 hook 설정
@@ -120,7 +120,7 @@ cd <your-project>
 또는 수동 설치:
 
 ```bash
-cp -r harness-marketplace/ ~/.claude/plugins/cache/harness-marketplace/harness-marketplace/1.0.0/
+cp -r harness-marketplace/ ~/.claude/plugins/cache/harness-marketplace/harness-marketplace/0.10.0/
 ```
 
 ## 문제 해결
@@ -267,8 +267,8 @@ AI 추천:
 | C2 | 파이프라인 | CI, AI 코드리뷰, 배포, 보안... (복수 선택) |
 | C3 | AI 리뷰 설정 | 코멘트만 / Critical 시 차단 / 자동 Approve |
 | L1 | 자기 학습 | 승인 후 학습 / 자동 학습 / 비활성화 |
-| A | 에이전트 선택 | security-reviewer, performance-auditor, game-economy-auditor... (25개 카탈로그, 복수 선택) |
-| G | 가이드 선택 | api-design, database-design, game-design... (18개 카탈로그, 복수 선택) |
+| A | 에이전트 선택 | security-reviewer, performance-auditor, game-economy-auditor... (40개 카탈로그, 복수 선택) |
+| G | 가이드 선택 | api-design, database-design, game-design... (25개 카탈로그, 복수 선택) |
 
 프로젝트 설명이 제공되면 (Manual 모드) 또는 인터뷰가 사용되면, AI가 각 단계에서 최적의 옵션에 `(Recommended — 이유)` 라벨을 표시합니다. 모든 옵션은 항상 표시됩니다.
 
@@ -602,8 +602,8 @@ AI가 실수 → 회귀 감지 → 수정 적용 →
 | project-config.yaml | **매핑** | 위자드 답변 → YAML 스키마 |
 | Hook 스크립트 (hooks/*.sh) | **템플릿** | `templates/hooks/*.sh.template` |
 | CI/CD 워크플로우 (.github/workflows/*.yml) | **템플릿** | `templates/ci-cd/github-actions/*.yml.template` |
-| agents/*.md | **AI 생성** | data/agents.yaml 카탈로그(34개) 기반 프로젝트 특화 에이전트 체크리스트 생성 |
-| guides/*.md | **AI 생성** | data/guides.yaml 카탈로그(18개) 기반 프로젝트 특화 개발 가이드 생성 |
+| agents/*.md | **AI 생성** | data/agents.yaml 카탈로그(40개) 기반 프로젝트 특화 에이전트 체크리스트 생성 |
+| guides/*.md | **AI 생성** | data/guides.yaml 카탈로그(25개) 기반 프로젝트 특화 개발 가이드 생성 |
 | classification.md | **AI 생성** | 프로젝트 특화 분류 규칙 |
 
 ### Config 기반 파이프라인
@@ -677,10 +677,18 @@ harness-marketplace/
 ├── .claude-plugin/
 │   ├── plugin.json                # 플러그인 매니페스트 (skills 경로 선언)
 │   └── marketplace.json           # 마켓플레이스 메타데이터
+├── .github/
+│   ├── CODEOWNERS                 # 모듈 owner — 자동 review request 라우팅
+│   ├── pull_request_template.md   # PR 스캐폴드 (Summary / Category / Impact / Verification)
+│   └── workflows/
+│       └── ai-readiness.yml       # CI 게이트: broken context ref 임계 ≤ 5
+├── .husky/
+│   └── pre-commit                 # 로컬 mirror — CI AI-Readiness 게이트 동일 임계
 ├── skills/
-│   ├── wizard/SKILL.md            # 메인 위자드 (3모드: 인터뷰, 수동, 자동감지)
+│   ├── wizard/SKILL.md            # 메인 위자드 (3모드: 인터뷰, 수동, 자동감지; Phase 7.5 star 프롬프트)
 │   ├── upgrade/SKILL.md           # Harness 업그레이드 (Custom Rules + 학습 로그 보존)
 │   ├── ci-cd/SKILL.md             # 독립 CI/CD 설정
+│   ├── launch-check/SKILL.md      # 출시 전 준비도 게이트 (Section 1 안전망 + Section 2 운영 감사)
 │   ├── learn/SKILL.md             # 팀 공유 학습 (git-tracked 지식 베이스)
 │   └── gh/SKILL.md                # GitHub 워크플로우 자동화 (Issue → Branch → PR)
 ├── templates/                     # Harness 골격 템플릿
@@ -711,14 +719,24 @@ harness-marketplace/
 │   │   ├── _log.sh                # 공유: log_block 헬퍼 (.claude/hook-blocks.log 기록)
 │   │   ├── *.sh.template          # 8개 hook 템플릿 (stdin 읽기, 차단 시 exit 2)
 │   │   └── hooks-config.json.template
-│   └── ci-cd/                     # CI/CD 워크플로우 템플릿
-│       └── github-actions/        # 5개 워크플로우 템플릿
-├── data/                          # 딥리서치 옵션 데이터셋 (14개 파일)
+│   ├── ci-cd/                     # CI/CD 워크플로우 템플릿
+│   │   └── github-actions/        # 5개 워크플로우 템플릿
+│   └── integrations/              # 관측성 통합 보일러플레이트 (Sentry, PostHog)
+│       ├── sentry/                # Next.js + Node backend init + error-boundary + health-check
+│       └── posthog/               # Next.js provider + events-catalog
+├── data/                          # 딥리서치 옵션 데이터셋 (15개 파일)
 ├── scripts/
+│   ├── CLAUDE.md                  # scripts/ 트리 module ctx
 │   ├── validate-harness.js        # 전체 검증 (구조, hook, CI/CD, 자기학습)
-│   └── merge-hooks.js             # settings.json 비파괴적 hook 머지
+│   ├── merge-hooks.js             # settings.json 비파괴적 hook 머지
+│   └── ai-readiness-score.py      # vendored stdlib-only AI-Readiness 루브릭 스코어러 (CI + husky)
+├── docs/
+│   ├── ARCHITECTURE.md            # 시스템 개요 (mermaid 3종: data flow / 3-layer / module deps)
+│   └── adr/                       # Architecture Decision Records (ADR-000 템플릿 + ADR-001..005)
+├── agent-results.json             # Distilled KPI summary (AI-Readiness Cat G — Agent Outcomes)
 ├── CHANGELOG.md                   # 버전 변경 이력
-├── CLAUDE.md                      # 프로젝트 지침서
+├── CLAUDE.md                      # 프로젝트 지침서 (진입 컨텍스트)
+├── MEMORY.md                      # 레포 차원 tribal-knowledge 외부화 store
 ├── LICENSE                        # Apache-2.0
 ├── NOTICE                         # 귀속 표시
 ├── package.json
@@ -740,7 +758,8 @@ harness-marketplace/
 
 | 버전 | 주요 내용 |
 |------|-----------|
-| [**v0.9.0**](https://github.com/aiAgentDevelop/harness-marketplace-plugin/releases/tag/v0.9.0) | AI-Readiness 인프라 — stdlib-only 스코어러 (`scripts/ai-readiness-score.py`) + GitHub Actions 게이트 + husky pre-commit 게이트 (broken-ref 임계 5) + `MEMORY.md` + ADR 5건 (`docs/adr/`) + mermaid 3종이 담긴 `docs/ARCHITECTURE.md` + `.github/CODEOWNERS` + PR 템플릿 + 모듈별 표준화 (Owns / Patterns / Cross-deps / Why 마커). 본 레포 AI-Readiness 점수: 45 → **91 / 100 (AI-Native)** |
+| [**v0.10.0**](https://github.com/aiAgentDevelop/harness-marketplace-plugin/releases/tag/v0.10.0) | Wizard Phase 7.5 — wizard 성공 완료 직후 1회 GitHub star 프롬프트. `gh` CLI 가 인증되어 있으면 자동 star, 없으면 OS 기본 브라우저 fallback. 머신별 마커 (`~/.claude/.harness-marketplace-star-prompted`) 로 머신당 최대 1회만 노출. `wizard_language` 로 KR/EN 분기 |
+| [v0.9.0](https://github.com/aiAgentDevelop/harness-marketplace-plugin/releases/tag/v0.9.0) | AI-Readiness 인프라 — stdlib-only 스코어러 (`scripts/ai-readiness-score.py`) + GitHub Actions 게이트 + husky pre-commit 게이트 (broken-ref 임계 5) + `MEMORY.md` + ADR 5건 (`docs/adr/`) + mermaid 3종이 담긴 `docs/ARCHITECTURE.md` + `.github/CODEOWNERS` + PR 템플릿 + 모듈별 표준화 (Owns / Patterns / Cross-deps / Why 마커). 본 레포 AI-Readiness 점수: 45 → **91 / 100 (AI-Native)** |
 | [v0.8.0](https://github.com/aiAgentDevelop/harness-marketplace-plugin/releases/tag/v0.8.0) | 옵저버빌리티 레이어 — Wizard Phase 4 Step D 필수 게이트 + Sentry/PostHog PoC 통합 템플릿 + `launch-check` 출시 전 감사 스킬 (Section 1 안전망 + Section 2 서비스 운영 준비도 7개 블로킹 체크) + 관측 플랫폼 카탈로그 11개 + `observability-auditor` 에이전트 + `observability-fundamentals` 가이드 |
 | [v0.7.0](https://github.com/aiAgentDevelop/harness-marketplace-plugin/releases/tag/v0.7.0) | 인터뷰 모드 (`/project-interview`) — 다중 라운드 딥 서비스 인터뷰로 종합 PRD 생성. 도메인 전문가 에이전트, 팀 구성, 10개 차원 구현 명확도 추적 |
 | [v0.6.0](https://github.com/aiAgentDevelop/harness-marketplace-plugin/releases/tag/v0.6.0) | Orchestration-by-default (`./CLAUDE.md` 자동 생성) + 실제 병렬 Fan-out/Fan-in 워커 + Phase 2.5 codebase-analysis + TDD 전략 + Supabase 보안 게이트 + monitor mode |

@@ -19,6 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **`docs/ARCHITECTURE.md`** — mermaid 다이어그램의 `benchmarks/` 노드 + edge + 해석 bullet 제거.
 - **`scripts/ai-readiness-score.py`** — eval signal 튜플에서 `"benchmarks"` 제거 (`agent-results.json` glob 은 위치 무관하게 동작하므로 점수에 영향 없음).
 - **`.gitignore`** — `benchmarks/results/` 관련 규칙 블록 제거.
+- **`README.md`** / **`README-ko.md`** — 현재 프로젝트 상태에 맞춰 sync. Version History 표에 **v0.10.0** 행 추가 (v0.9.0 unbold). Plugin Structure 트리 갱신: `skills/` 에 `launch-check/SKILL.md` 추가 (6개 skills), `scripts/` 에 `ai-readiness-score.py` + `CLAUDE.md` 추가, `templates/` 에 `integrations/` (Sentry/PostHog) 추가, `data/` 카운트 14 → 15, root 에 `MEMORY.md` / `agent-results.json` / `docs/` / `.github/` / `.husky/` 추가. 카탈로그 카운트 stale 갱신: 에이전트 34 → **40**, 가이드 18 → **25** (v0.4.0 이후 증가분 반영). Manual install 예시의 `1.0.0` → **`0.10.0`** 경로 수정.
 
 ## [0.10.0] - 2026-05-11
 
