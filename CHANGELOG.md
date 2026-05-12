@@ -7,19 +7,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.11.0] - 2026-05-12
+
+### Highlights
+
+**Honest Benchmarks 인프라 전면 제거 + README 현행화**. `benchmarks/` 디렉토리 전체 (runner / scorer / tasks / reference-projects / results / reports, 약 20K 라인 — full harness 가 CLAUDE.md-only 변종에 6/13 축으로 패배한다는 self-admitted weakness 데이터를 외부 노출하던 인프라) 와 모든 cross-reference (README × 2 의 "Honest Benchmarks" 섹션, Plugin Structure tree, CLAUDE.md / MEMORY.md / docs/ARCHITECTURE.md / scripts/ai-readiness-score.py / .gitignore / 과거 CHANGELOG 의 벤치마크 bullet) 제거. 동시에 README × 2 를 현 프로젝트 상태에 맞춰 동기 — Plugin Structure tree 가 v0.8.0 (`templates/integrations/`), v0.9.0 (`MEMORY.md`, `docs/`, `.github/`, `.husky/`, `scripts/ai-readiness-score.py`), 그리고 직전 PR #62 의 `agent-results.json` root 이동 까지 모두 반영. 에이전트/가이드 카탈로그 카운트 stale (34/18 → 40/25) 도 갱신.
+
+본 릴리스는 user-facing wizard / upgrade / launch-check / ci-cd / learn / gh / generated-harness API 에 **어떤 breaking change 도 없음**. 내부 평가 인프라 제거 + 문서 동기화가 전부.
+
 ### Removed
 
-- **`benchmarks/`** (entire directory) — Phase 1 v2 benchmark infrastructure (runner / scorer / tasks / reference-projects / results / docs) removed along with all README references. The published empirical data did not represent the plugin's intended value proposition for external readers.
+- **`benchmarks/`** (entire directory) — Phase 1 v2 benchmark infrastructure (runner / scorer / tasks / reference-projects / results / docs) removed along with all README references. The published empirical data did not represent the plugin's intended value proposition for external readers. (PR [#62](https://github.com/aiAgentDevelop/harness-marketplace-plugin/pull/62))
 
 ### Changed
 
-- **`benchmarks/results/agent-results.json`** → **`agent-results.json`** (repo root) — relocated so the AI-Readiness scoring KPI summary survives the `benchmarks/` removal. `.claude/` is gitignored, so root placement keeps it tracked.
-- **`README.md`** / **`README-ko.md`** — "Honest Benchmarks" 섹션 + intro 언급 + Plugin Structure tree 의 `benchmarks/` 블록 + Version History v0.6.0 row 의 `Phase 1 v2 benchmark` 문구 제거.
-- **`CLAUDE.md`** / **`MEMORY.md`** — Cross-module dependencies 의 `benchmarks/` bullet 제거.
-- **`docs/ARCHITECTURE.md`** — mermaid 다이어그램의 `benchmarks/` 노드 + edge + 해석 bullet 제거.
-- **`scripts/ai-readiness-score.py`** — eval signal 튜플에서 `"benchmarks"` 제거 (`agent-results.json` glob 은 위치 무관하게 동작하므로 점수에 영향 없음).
-- **`.gitignore`** — `benchmarks/results/` 관련 규칙 블록 제거.
-- **`README.md`** / **`README-ko.md`** — 현재 프로젝트 상태에 맞춰 sync. Version History 표에 **v0.10.0** 행 추가 (v0.9.0 unbold). Plugin Structure 트리 갱신: `skills/` 에 `launch-check/SKILL.md` 추가 (6개 skills), `scripts/` 에 `ai-readiness-score.py` + `CLAUDE.md` 추가, `templates/` 에 `integrations/` (Sentry/PostHog) 추가, `data/` 카운트 14 → 15, root 에 `MEMORY.md` / `agent-results.json` / `docs/` / `.github/` / `.husky/` 추가. 카탈로그 카운트 stale 갱신: 에이전트 34 → **40**, 가이드 18 → **25** (v0.4.0 이후 증가분 반영). Manual install 예시의 `1.0.0` → **`0.10.0`** 경로 수정.
+- **`benchmarks/results/agent-results.json`** → **`agent-results.json`** (repo root) — relocated so the AI-Readiness scoring KPI summary survives the `benchmarks/` removal. `.claude/` is gitignored, so root placement keeps it tracked. (PR [#62](https://github.com/aiAgentDevelop/harness-marketplace-plugin/pull/62))
+- **`README.md`** / **`README-ko.md`** — "Honest Benchmarks" 섹션 + intro 언급 + Plugin Structure tree 의 `benchmarks/` 블록 + Version History v0.6.0 row 의 `Phase 1 v2 benchmark` 문구 제거. (PR [#62](https://github.com/aiAgentDevelop/harness-marketplace-plugin/pull/62))
+- **`CLAUDE.md`** / **`MEMORY.md`** — Cross-module dependencies 의 `benchmarks/` bullet 제거. (PR [#62](https://github.com/aiAgentDevelop/harness-marketplace-plugin/pull/62))
+- **`docs/ARCHITECTURE.md`** — mermaid 다이어그램의 `benchmarks/` 노드 + edge + 해석 bullet 제거. (PR [#62](https://github.com/aiAgentDevelop/harness-marketplace-plugin/pull/62))
+- **`scripts/ai-readiness-score.py`** — eval signal 튜플에서 `"benchmarks"` 제거 (`agent-results.json` glob 은 위치 무관하게 동작하므로 점수에 영향 없음). (PR [#62](https://github.com/aiAgentDevelop/harness-marketplace-plugin/pull/62))
+- **`.gitignore`** — `benchmarks/results/` 관련 규칙 블록 제거. (PR [#62](https://github.com/aiAgentDevelop/harness-marketplace-plugin/pull/62))
+- **`README.md`** / **`README-ko.md`** — 현재 프로젝트 상태에 맞춰 sync. Version History 표에 **v0.10.0** 행 추가 (v0.9.0 unbold). Plugin Structure 트리 갱신: `skills/` 에 `launch-check/SKILL.md` 추가 (6개 skills), `scripts/` 에 `ai-readiness-score.py` + `CLAUDE.md` 추가, `templates/` 에 `integrations/` (Sentry/PostHog) 추가, `data/` 카운트 14 → 15, root 에 `MEMORY.md` / `agent-results.json` / `docs/` / `.github/` / `.husky/` 추가. 카탈로그 카운트 stale 갱신: 에이전트 34 → **40**, 가이드 18 → **25** (v0.4.0 이후 증가분 반영). Manual install 예시의 `1.0.0` → **`0.10.0`** 경로 수정. (PR [#63](https://github.com/aiAgentDevelop/harness-marketplace-plugin/pull/63))
+
+### Notes
+
+- AI-Readiness 점수: v0.10.0 기준 91 → v0.11.0 기준 **85 / 100 (AI-Ready)**. 하락 −6 은 `benchmarks/` 가 Cat E4 (`has_evals`) + Cat G (Agent Outcomes, `eval_dirs`) 두 시그널을 보강하던 효과가 빠진 의도된 결과 (`agent-results.json` 은 root 으로 옮겨 Cat G 의 `metric_files` 시그널은 유지). husky pre-commit + CI gate 의 broken-ref 임계 (5) 는 0/73 으로 통과.
+- ADR-005 (3-place version sync) 준수: `plugin.json` · `marketplace.json` · `package.json` 동시 0.10.0 → **0.11.0** 갱신.
 
 ## [0.10.0] - 2026-05-11
 
