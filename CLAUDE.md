@@ -98,7 +98,6 @@ Full data-flow + module-dependency diagrams: see [`docs/ARCHITECTURE.md`](docs/A
 - `data/*.yaml` (옵션 카탈로그) → `skills/wizard`, `skills/upgrade`, `skills/ci-cd` 가 공통 소비.
 - `templates/` (skeleton) → `skills/wizard` (생성), `skills/upgrade` (재생성).
 - `scripts/validate-harness.js` → `skills/wizard` 와 `skills/upgrade` 양쪽 머지 직전 게이트로 호출됨.
-- `benchmarks/` → wizard / upgrade 의 효과를 정량 측정하는 메타-도구.
 
 **Important**: 한 파일 변경이 위 chain 의 어느 단계에 영향 가는지 확인하지 않으면 다른 SKILL.md 가 stale 한 reference 를 들고 있게 됨. 변경 전 [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) 의 dependency 표 한 번 확인 권장.
 

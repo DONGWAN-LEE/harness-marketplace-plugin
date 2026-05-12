@@ -115,10 +115,6 @@ flowchart LR
         TM[templates/]
     end
 
-    subgraph Telemetry["측정"]
-        BM[benchmarks/]
-    end
-
     DT --> WZ
     DT --> UP
     DT --> CI
@@ -129,8 +125,6 @@ flowchart LR
     WZ --> SC
     UP --> SC
     SC --> TS
-    BM -.->|효과 측정| WZ
-    BM -.->|효과 측정| UP
 
     LC -.-> WZ
     LR -.-> UP
@@ -148,7 +142,6 @@ flowchart LR
 - `data/*.yaml` 은 wizard / upgrade / ci-cd 의 공통 입력 — 옵션을 추가하면 셋 다 갱신 가능성.
 - `templates/` 도 동일.
 - `scripts/validate-harness.js` 는 wizard / upgrade 의 머지-게이트.
-- `benchmarks/` 는 wizard / upgrade 의 효과를 측정하는 메타-도구.
 - `launch-check` / `learn` / `gh` 는 wizard 가 생성한 harness 가 사용하지만, plugin 측에서는 wizard / upgrade 의 보조 skill.
 
 ## Cross-module dependencies (text summary)

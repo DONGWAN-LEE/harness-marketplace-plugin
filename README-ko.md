@@ -29,8 +29,6 @@ Claude Code 로 토이 프로젝트 이상을 해본 팀이라면 다음 중 두
 
 이 플러그인은 이 모든 문제를 한 번의 위자드 실행으로 대체합니다. 모드에 따라 5–25개 질문에 답하면, 소규모팀이 실제로 의존할 수 있는 파이프라인이 나옵니다. 관측성 게이트까지 포함되어 — 에러 추적 없이는 배포 자체가 막힙니다.
 
-그리고 자체 벤치마크로 **이 플러그인이 어디서 이기고 어디서 지는지** 공개합니다. 아래 [Honest Benchmarks](#honest-benchmarks-phase-1-v2--endtoend-isoiec-25010--owasp-asvs--dora) 섹션을 보세요 — "우리가 만든 플러그인 가치의 대부분은 마법이 아니라 위자드가 써준 CLAUDE.md 에서 온다" 고 스스로 밝히는 플러그인입니다.
-
 ---
 
 ## Quick Start
@@ -719,14 +717,6 @@ harness-marketplace/
 ├── scripts/
 │   ├── validate-harness.js        # 전체 검증 (구조, hook, CI/CD, 자기학습)
 │   └── merge-hooks.js             # settings.json 비파괴적 hook 머지
-├── benchmarks/                    # Phase 0.5 3-레이어 공정 평가 (harness 효과 측정 연구)
-│   ├── README.md                  # 3-레이어 방법론 + 편파성 방지 장치
-│   ├── PROTOCOL.md                # 선등록 가설/지표/판정규칙
-│   ├── tasks/                     # 10개 태스크 (security/orchestration/pipeline)
-│   ├── reference-projects/        # Seed 프로젝트 + harness 오버레이
-│   ├── runner/                    # 다단계 러너 (invoke/control/treatment/probe/batch)
-│   ├── scorer/                    # 자동 + 7차원 LLM judge + 집계
-│   └── results/                   # phase05-report.md, scored/, aggregated.json
 ├── CHANGELOG.md                   # 버전 변경 이력
 ├── CLAUDE.md                      # 프로젝트 지침서
 ├── LICENSE                        # Apache-2.0
@@ -742,58 +732,6 @@ harness-marketplace/
 
 - **Claude Code** Agent Teams 활성화 (`CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1`)
 
-## Honest Benchmarks (Phase 1 v2 — End-to-End, ISO/IEC 25010 + OWASP ASVS + DORA)
-
-`Plain Claude Code` vs `harness-marketplace` (v0.6.0 wizard 결과물) 의 end-to-end 평가. 국제 표준 준거 (ISO/IEC 25010, OWASP ASVS v4.0.3, OWASP Top 10 2021, CWE Top 25, DORA, HELM 원칙). 이전 Phase 0.5 단일-task 벤치마크 (commit `a455abe` 이전) 를 대체.
-
-**설계**: 13축 가중 채점 (총 100%) × 3 condition × 17 OWASP adversarial task + 12 multi-step sprint cell (각 8 sequential step, state carry-over). 실행 전 [`PROTOCOL-v2.md`](./benchmarks/PROTOCOL-v2.md) 선등록 (FROZEN).
-
-### 핵심 결과 (Pilot + Slim, 198 effective units, $63.78)
-
-| Condition | Weighted Total | 비고 |
-|---|---:|---|
-| `bare_claude` (플러그인 없음) | 83.0 | 베이스라인 |
-| **`claude_md_only`** (CLAUDE.md 만, skills/hooks 없음) | **88.1 ← 우승** | wizard 가 생성한 CLAUDE.md 만으로 |
-| `full_harness` (v0.6.0 wizard 전체) | 86.8 | 풀 skills + hooks + agents |
-
-**wizard 가 생성하는 `CLAUDE.md`** 가 오케스트레이션의 핵심 (load-bearing). skills/hooks/agents 레이어는 다음 3개 축에서 측정 가능한 추가 가치를 제공:
-
-| 축 | bare | cmo | harness | 우승 |
-|---|---:|---:|---:|---|
-| **Perf — Cost** (sequential 작업) | 83 | 81 | **84** | full_harness |
-| **Compatibility** (scope discipline) | 89 | 92 | **97** | full_harness |
-| **Usability** (judge rubric) | 54 | 58 | **62** | full_harness |
-
-다만 `claude_md_only` 가 Functional Suitability (86 vs 82), Security ASVS L2 (77 vs 69), CWE-가중 결함 (99 vs 99 동률), Maintainability (96 vs 96 동률), Wall-time (88 vs 87), DORA Lead Time (93 vs 91) 에서 우위.
-
-**정직한 해석**: harness 의 측정 가능한 lift 대부분은 wizard 가 생성한 CLAUDE.md 에서 옴 (`bare_claude` 에는 없음). 런타임 hooks/skills 는 polish 축에서 진짜 가치를 더하지만, 본 벤치마크 구성에서는 보안 지표를 결정적으로 끌어올리지 않음 — 에이전트가 CLAUDE.md 컨벤션을 통해 이미 자가-정렬되어 런타임 hook 이 발동될 일이 거의 없었음 (harness condition 에서 평균 0.1 hook BLOCK / run).
-
-**회귀 0건** 96 sequential sprint step 전체 (모든 condition). harness 의 regression-loop 가 잡을 일이 없었음.
-
-### 결정 평가 (PROTOCOL-v2 §7 기준)
-
-| 가설 | Pilot | Slim |
-|---|---|---|
-| H1 (Security ASVS 격차 ≥ 15) | ❌ +3 — 미달 | ❌ +3 — 미달 |
-| H3 (Weighted total 격차 ≥ 5) | ❌ +3.9 — 미달 | ❌ +3.8 — 미달 |
-| H5 (cmo 가 bare/harness 사이) | ❌ 역전 | ❌ 역전 |
-
-두 stage 모두 동일한 결론: 플러그인의 측정 가능한 영향력은 wizard 가 생성한 CLAUDE.md 에서 압도적으로 나오며, 런타임 skills/hooks 레이어는 보조적. 오케스트레이션 scaffolding 을 위해 플러그인을 채택하되, skills/hooks 는 multi-step 라이프사이클에서 Compatibility / Usability / Perf-Cost polish 추가로 기대.
-
-```bash
-# 벤치마크 실행 (resumable, summary.json 존재 검사로 dedup)
-cd benchmarks && npm install
-node scorer/aggregate-v2.js --verify-weights      # 13축 가중치 합 100% 검증
-node scorer/verify-blinding.js                    # judge 프롬프트에 condition label 누출 없는지 검증
-node runner/render-seeds.js                       # reference-projects/{claude-md-only,harness}-{nextjs,fastapi}/ 빌드
-node runner/batch.js --stage pilot --concurrency 2 --limit 25  # OWASP A2 chunk
-node runner/batch.js --stage slim --concurrency 2 --limit 4    # sprint chunk
-node scorer/judge-batch.js --stage slim --concurrency 3        # blind LLM judge
-node scorer/aggregate-v2.js --stage slim                       # reports/slim-report.md 생성
-```
-
-전체 디렉터리 구조는 [`benchmarks/README.md`](./benchmarks/README.md), 선등록된 가설·결정 규칙은 [`benchmarks/PROTOCOL-v2.md`](./benchmarks/PROTOCOL-v2.md), 13축 매트릭스 + per-task ASVS 분해 + "harness 가 지는 경우" 정직 섹션은 [`benchmarks/reports/slim-report.md`](./benchmarks/reports/slim-report.md) 에 있습니다.
-
 ## 버전 히스토리
 
 태그, 소스 압축 파일, 릴리스 노트는 [**GitHub Releases**](https://github.com/aiAgentDevelop/harness-marketplace-plugin/releases)에서 확인하세요. 저장소 내부 변경 이력은 [`CHANGELOG.md`](./CHANGELOG.md)에서 볼 수 있습니다.
@@ -805,7 +743,7 @@ node scorer/aggregate-v2.js --stage slim                       # reports/slim-re
 | [**v0.9.0**](https://github.com/aiAgentDevelop/harness-marketplace-plugin/releases/tag/v0.9.0) | AI-Readiness 인프라 — stdlib-only 스코어러 (`scripts/ai-readiness-score.py`) + GitHub Actions 게이트 + husky pre-commit 게이트 (broken-ref 임계 5) + `MEMORY.md` + ADR 5건 (`docs/adr/`) + mermaid 3종이 담긴 `docs/ARCHITECTURE.md` + `.github/CODEOWNERS` + PR 템플릿 + 모듈별 표준화 (Owns / Patterns / Cross-deps / Why 마커). 본 레포 AI-Readiness 점수: 45 → **91 / 100 (AI-Native)** |
 | [v0.8.0](https://github.com/aiAgentDevelop/harness-marketplace-plugin/releases/tag/v0.8.0) | 옵저버빌리티 레이어 — Wizard Phase 4 Step D 필수 게이트 + Sentry/PostHog PoC 통합 템플릿 + `launch-check` 출시 전 감사 스킬 (Section 1 안전망 + Section 2 서비스 운영 준비도 7개 블로킹 체크) + 관측 플랫폼 카탈로그 11개 + `observability-auditor` 에이전트 + `observability-fundamentals` 가이드 |
 | [v0.7.0](https://github.com/aiAgentDevelop/harness-marketplace-plugin/releases/tag/v0.7.0) | 인터뷰 모드 (`/project-interview`) — 다중 라운드 딥 서비스 인터뷰로 종합 PRD 생성. 도메인 전문가 에이전트, 팀 구성, 10개 차원 구현 명확도 추적 |
-| [v0.6.0](https://github.com/aiAgentDevelop/harness-marketplace-plugin/releases/tag/v0.6.0) | Orchestration-by-default (`./CLAUDE.md` 자동 생성) + 실제 병렬 Fan-out/Fan-in 워커 + Phase 2.5 codebase-analysis + TDD 전략 + Supabase 보안 게이트 + monitor mode + Phase 1 v2 벤치마크 |
+| [v0.6.0](https://github.com/aiAgentDevelop/harness-marketplace-plugin/releases/tag/v0.6.0) | Orchestration-by-default (`./CLAUDE.md` 자동 생성) + 실제 병렬 Fan-out/Fan-in 워커 + Phase 2.5 codebase-analysis + TDD 전략 + Supabase 보안 게이트 + monitor mode |
 | [v0.5.2](https://github.com/aiAgentDevelop/harness-marketplace-plugin/releases/tag/v0.5.2) | upgrade skill & validate-harness polish (v0.5.1 현장 테스트에서 발견된 이슈 수정) |
 | [v0.5.1](https://github.com/aiAgentDevelop/harness-marketplace-plugin/releases/tag/v0.5.1) | upgrade skill이 레거시 v1.x hook을 자동 감지/마이그레이션 |
 | [v0.5.0](https://github.com/aiAgentDevelop/harness-marketplace-plugin/releases/tag/v0.5.0) | ⚠️ BREAKING — hook 템플릿을 Claude Code v2.x 컨트랙트(stdin JSON + exit 2)로 마이그레이션 |
